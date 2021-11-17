@@ -1,4 +1,4 @@
-function [s] = Z_sortData(dataset)
+function [s] = Z_mergeData(dataset)
     
     rows = 0;
     max_length = 0;
