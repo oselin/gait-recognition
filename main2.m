@@ -42,12 +42,13 @@ end
 %% CREATION OF THE DATA STRUCTURE
 
 dataset = {file1, file2};
-data = mergeData(dataset);
+[time, data] = mergeData(dataset);
 
 %% DATA VISUALIZATION
-
-
-
+yyaxis left, plot(time,data(:,3));
+hold on
+yyaxis right,plot(time,data(:,1));
+set(gca, 'YTick', data(1,1):data(end,1));
 
 %% MULTI-LAYER STRUCTURE
 m = setMultiLayerStruct(data, NCOLUMNS);
