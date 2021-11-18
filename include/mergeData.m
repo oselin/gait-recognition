@@ -11,6 +11,8 @@ function [s] = mergeData(dataset)
         end
     end
     
+    
+
     max_length = max_length + 1;
     s = zeros(rows, max_length);
     

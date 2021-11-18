@@ -4,23 +4,33 @@ function [structure] = setMultiLayerStruct(data, n_columns)
 
     act = 0;
     
-    %markers = {};
     for i=1:height(data)
-%         if (i>1)
-%             if (data(i,1) ~= data(i-1,1))
-%                 markers{width(markers) + 1} = i;
-%             end
-%         end
         if (data(i,1)>act)
             act = data(i,1);
         end
     end
+    %%
+    %To implement> sort data for task id
     
-    
-    %creation of the structure
+    %creation of the empty structure
     for j=1:act
-        structure{j} = zeros(1, n_columns,width(data));
+        disp("WIDTH : " + width(data));
+        structure{j} = zeros(1, n_columns,width(data)-1);
     end
+    
+    %Filling the multi-dimensional matrices structure with data
+    for i = 1:width(structure)
+        disp("NEW DATA");
+        buffer = 1+(sum(data(:,1)<=i));
+        for layer = 2:width(data)
+            for element = 1:(sum(data(:,1) == i)/n_columns)
+                disp(buffer);
+                structure{i}(element,:, layer-1) = data(buffer:buffer+n_columns-1, layer).';
+                buffer = buffer + n_columns;
+            end
+        end
+    end
+
 
 
 
