@@ -45,14 +45,28 @@ dataset = {file1, file2};
 [time, data] = mergeData(dataset);
 
 %% DATA VISUALIZATION
-yyaxis left, plot(time,data(:,3));
+
+dataToDisplay = 3;
+
+yyaxis left, plot(time,data(:,dataToDisplay));
 hold on
 yyaxis right,plot(time,data(:,1));
 set(gca, 'YTick', data(1,1):data(end,1));
 hold off;
 
+%% FFT CONVERSION
+[xRange,dataFFT] = freqTransform(data, 0.5);
+
+%% Plot
+dataToDisplay = 3;
+
+figure
+plot(xRange, dataFFT(:,dataToDisplay));
+xlabel('Frequency (Hz)')
+ylabel('Magnitude')
+title('Acceleration FFT')
+
 %% MULTI-LAYER STRUCTURE
 m = setMultiLayerStruct(data, NCOLUMNS);
-M2= freqTransform(data, 0.5);
 
-
+n = extractFeatures(m);

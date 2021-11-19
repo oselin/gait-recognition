@@ -1,4 +1,4 @@
-function [output] = freqTransform(timeData, fs)
+function [ff, output] = freqTransform(timeData, fs)
 
     %For a better frequency-domain transformation, it's better to subtract
     %the mean value of the series
@@ -30,17 +30,14 @@ function [output] = freqTransform(timeData, fs)
     ff = (0:fs/n:fN)/fN;
 
     %Normalized Fourier transform
-    y = fft(timeData)/n
+    y = fft(timeData)/n;
+    
     
     %PLOT della fft: NOTA-> uso il valore assoluto di fft! Inoltre mi fermo a
     %metà dati ->freq positive
     
-    output = abs(y(1:(ceil((n+1)/2))));
+    output = abs(y(1:(ceil((n+1)/2)),:));
 
-    %% Plot
-    plot(ff, output(:,2));
-    xlabel('Frequency (Hz)')
-    ylabel('Magnitude')
-    title('Acceleration FFT')
+
 
 end
