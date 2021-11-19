@@ -49,8 +49,10 @@ yyaxis left, plot(time,data(:,3));
 hold on
 yyaxis right,plot(time,data(:,1));
 set(gca, 'YTick', data(1,1):data(end,1));
+hold off;
 
 %% MULTI-LAYER STRUCTURE
 m = setMultiLayerStruct(data, NCOLUMNS);
+M2= freqTransform(data, 0.5);
 
 
