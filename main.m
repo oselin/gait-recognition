@@ -67,10 +67,12 @@ ylabel('Magnitude')
 title('Acceleration FFT')
 
 %% MULTI-LAYER STRUCTURE
-m = setMultiLayerStruct(data, NCOLUMNS);
+mlData = setMultiLayerStruct(data, NCOLUMNS);
 disp("Multilayer structure created");
 
 %% FEATURE MATRIX
-n = extractFeatures(m);
+featuresMatrix = extractFeatures(mlData);
 disp("Feature matrix created");
 
+%% FEATURES TABLE FOR MACHINE LEARNING ALGORITHM (CLASSIFICATION LEARNER)
+featuresTable = featuresTOtable(featuresMatrix,file1.Properties.VariableNames,features_avaiable);

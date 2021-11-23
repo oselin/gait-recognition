@@ -69,7 +69,7 @@ function [table] =  extractFeatures(data)
             column_index = column_index + 1;
         end
 
-        table(row_index, end) = index;
+        table(i, end) = index;
 
          if row_index > height(data{index})
              index = index + 1;

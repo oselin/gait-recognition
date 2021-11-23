@@ -1,11 +1,17 @@
 function [table] = featuresTOtable(data, vars, features)
     
-    labels = cell(width(data));
-
-    for i = 1:length(vars)
+    labels = cell(1,width(data));
+    
+    buffer = 1;
+    for i = 4:length(vars)
         for j = 1:length(features)
-            labels{i} = char(vars{i} + "-" + features{j});
+            labels{buffer} = char(vars{i} + "-" + features{j});
+            buffer = buffer + 1;
         end
     end
+    labels{end} = 'ID';
+    %labels = convertStringsToChars(labels);
+    
     table = array2table(data, 'VariableNames',labels);
+    
 end
