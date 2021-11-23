@@ -21,6 +21,9 @@ function [timestamp,data] = mergeData(dataset)
     for i=1:length(dataset)
         for row = 1:height(dataset{i})
             data(r,1:width(dataset{i}{row,:})-2) = [i,dataset{i}{row,4:end}];
+            if (width(dataset{i}{row,4:end}) < max_width-2)
+                disp("WARNING LINE " + num2str(r) + ": missing some features"); 
+            end
             r = r + 1;
         end
     end
