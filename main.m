@@ -6,7 +6,7 @@ clc
 addpath("include");
 
 %% MACROS
-NCOLUMNS = 150;
+NCOLUMNS = 40;
 STARTING_FS = 100;
 
 activities = ["PhaseONE","PhaseTWO","PhaseTHREE", "PhaseFOUR"];
@@ -84,7 +84,7 @@ disp("Training and test set successfully extracted");
 featuresTrainingTable = featuresTOtable(trainingSet,file1.Properties.VariableNames,features_avaiable);
 
 %% CLASSIFICATION LEARNER
-%classificationLearner;
+classificationLearner;
 
 %% PREDICTION AND CONFUSION MATRIX
 %trainedModel = load(['output/firstModel.mat']).trainedModel;
