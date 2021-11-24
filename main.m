@@ -40,7 +40,7 @@ end
 
 %% CREATION OF THE DATA STRUCTURE
 
-dataset = {file1, file2};
+dataset = {file1}; %, file2};
 [time, data] = mergeData(dataset);
 disp("Dataset created");
 
@@ -76,3 +76,18 @@ disp("Feature matrix created");
 
 %% FEATURES TABLE FOR MACHINE LEARNING ALGORITHM (CLASSIFICATION LEARNER)
 featuresTable = featuresTOtable(featuresMatrix,file1.Properties.VariableNames,features_avaiable);
+
+%% TRAINING AND TEST SETS
+[trainingSet, testSet] = splitData(featuresMatrix,0.8);
+disp("Training and test set successfully extracted");
+
+featuresTrainingTable = featuresTOtable(trainingSet,file1.Properties.VariableNames,features_avaiable);
+
+%% CLASSIFICATION LEARNER
+%classificationLearner;
+
+%% PREDICTION AND CONFUSION MATRIX
+%trainedModel = load(['output/firstModel.mat']).trainedModel;
+
+%predictions = predict(trainedModel.ClassificationEnsemble, testSet(:,1:end-1)); %all the data except for the actual ID
+%confusionchart(testSet(:,end), predictions)

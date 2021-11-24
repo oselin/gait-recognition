@@ -20,7 +20,11 @@ function [timestamp,data] = mergeData(dataset)
     r = 1;
     for i=1:length(dataset)
         for row = 1:height(dataset{i})
-            data(r,1:width(dataset{i}{row,:})-2) = [i,dataset{i}{row,4:end}];
+            %since the second row is the TIMESTAMP
+            id = getID(dataset{i}{row,2});
+
+            data(r,1:width(dataset{i}{row,:})-2) = [id,dataset{i}{row,4:end}];
+
             if (width(dataset{i}{row,4:end}) < max_width-2)
                 disp("WARNING LINE " + num2str(r) + ": missing some features"); 
             end

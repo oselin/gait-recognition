@@ -70,11 +70,11 @@ function [table] =  extractFeatures(data)
         end
 
         table(i, end) = index;
-
-         if row_index > height(data{index})
-             index = index + 1;
-             row_index = 1;
-         end
+        row_index = row_index + 1;
+        if row_index > height(data{index})
+            index = index + 1;
+            row_index = 1;
+        end
     end
     
 

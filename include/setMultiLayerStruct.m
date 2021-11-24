@@ -1,28 +1,24 @@
 function [structure] = setMultiLayerStruct(data, n_columns)
     
-    %get the maximum number of activities
+    %get the total number fo classes
 
-    act = 0;
-    
-    for i=1:height(data)
-        if (data(i,1)>act)
-            act = data(i,1);
-        end
-    end
+    class = length(unique(data(:,1))) - 1; %minus 1 bc with class 0 I labeled non-classified data
     
     %%Creation of the empty structure
-    for j=1:act
-        structure{j} = zeros(1, n_columns,width(data)-1);
+    for j=1:class
+        structure{j} = zeros(1, n_columns, width(data)-1); % minus 1 bc I'm dropping the ID
     end
     
+    sortedClassMatrix = sortDataByClass(data);
+
     %Filling the multi-dimensional matrices structure with data
-    for activity = 1:width(structure)
-        for layer = 2:width(data)
+    for n_class = 1:class
+        for layer = 2:width(sortedClassMatrix) %from 2 bc the first column is for the ID
             
-            buffer = 1+(sum(data(:,1)<activity));
-            for element = 1:fix(sum(data(:,1) == activity)/n_columns)
+            buffer = 1+(sum(sortedClassMatrix(:,1)<n_class));
+            for element = 1:fix(sum(sortedClassMatrix(:,1) == n_class)/n_columns)
                 
-                structure{activity}(element,:, layer-1) = data(buffer:buffer+n_columns-1, layer).';
+                structure{n_class}(element,:, layer-1) = sortedClassMatrix(buffer:buffer+n_columns-1, layer).';
                 buffer = buffer + n_columns;
             end
         end
