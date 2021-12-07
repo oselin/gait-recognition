@@ -27,11 +27,11 @@ file = detectPhases(file2);
 [training, test] = splitData(file,0.8);
 
 [trainingX, trainingY] = splitLabel(training);
-[testX, testY] = splitLabel(test);
+[testX, testY]         = splitLabel(test);
 
 %% Setting up the RNN network
 %% -General settings
-numFeatures = width(testX);
+numFeatures = 23;
 numHiddenUnits = 200;
 numClasses = 4;
 
@@ -42,14 +42,27 @@ layers = [ ...
     softmaxLayer
     classificationLayer];
 
-%% Setting the options for the LSTM
+%% -Setting the options for the LSTM
 options = trainingOptions('adam', ...
     'MaxEpochs',60, ...
     'GradientThreshold',2, ...
     'Verbose',0, ...
     'Plots','training-progress');
 
+trainingX = transposition(trainingX);
+trainingY = transposition(trainingY,'c');
+testX = transposition(testX);
+testY = transposition(testY,'c');
 
 net = trainNetwork(trainingX,trainingY,layers,options);
+%% Plot of the testing data
+figure
+plot(testX{1}')
+xlabel("Time Step")
+legend("Feature " + (1:numFeatures))
+title("Test Data")
+%% Prediction of the classes (GAIT PHASES)
+YPred = classify(net,testX{1});
 
-%YPred = classify(net,XTest{1});
+%% Accuracy of the network
+acc = sum(YPred == testY{1})./numel(testY{1})

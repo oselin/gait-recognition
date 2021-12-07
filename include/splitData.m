@@ -1,4 +1,6 @@
-function [matrixTraining, matrixTesting] = splitData(matrix, percSplit)
+function [matrixTraining, matrixTesting] = splitData(varargin)
+    matrix      = varargin{1};
+    percSplit   = varargin{2};
     
     if (percSplit > 1)
         disp("The split index must be within 0 and 1");
@@ -15,9 +17,12 @@ function [matrixTraining, matrixTesting] = splitData(matrix, percSplit)
     matrixTraining = zeros(lenPercent,width(matrix));              
     matrixTesting = zeros((len_matrix-lenPercent),width(matrix));
     
-    
-    indexes = randperm(len_matrix,len_matrix-lenPercent); %get random row indexes
-    
+    if (nargin == 3 && strcmp(varargin{3},"rand"))
+        indexes = randperm(len_matrix,len_matrix-lenPercent); %get random row indexes
+    else
+        indexes = (1:len_matrix-lenPercent);
+    end
+
     counterTraining = 1;
     counterTesting = 1;
     
