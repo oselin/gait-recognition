@@ -1,5 +1,4 @@
 %% GAIT RECOGNITION BY ML ANALYSIS ON IMU DATA
-
 clear ;
 close all;
 clc
@@ -20,38 +19,37 @@ catch ME
     end
 end
 
-%% CREATION OF THE DATA STRUCTURE
-time    = file2{:,2};
-mydata  = file2{:,9};
 
-%% FILTERING
-[B, A] = butter(3, 0.01,"high");
- filteredData = filter(B, A,mydata);
+%% Adding LABELS by threshold method
+file = detectPhases(file2);
 
-%% DATA VISUALIZATION
+%% Creating the TEST SET and the TRANING SET
+[training, test] = splitData(file,0.8);
 
-figure(1)
-plot(time,mydata);
-hold on
-plot(time,filteredData);
-hold off
+[trainingX, trainingY] = splitLabel(training);
+[testX, testY] = splitLabel(test);
 
-%% Find the MAX | MIN elements
-THRESHOLD = 150;
-[MM, II] = findpeaks(filteredData,'MinPeakHeight', THRESHOLD);
-[mm, ii] = findpeaks(-filteredData,'MinPeakHeight',THRESHOLD);
+%% Setting up the RNN network
+%% -General settings
+numFeatures = width(testX);
+numHiddenUnits = 200;
+numClasses = 4;
 
-%% Find the max | min elements
-[M, I] = findpeaks(filteredData, 'MinPeakHeight', THRESHOLD/3);
-[m, i] = findpeaks(-filteredData,'MinPeakHeight', THRESHOLD/3);
+layers = [ ...
+    sequenceInputLayer(numFeatures)
+    lstmLayer(numHiddenUnits,'OutputMode','sequence')
+    fullyConnectedLayer(numClasses)
+    softmaxLayer
+    classificationLayer];
 
-%% Plot the peaks
-figure(2)
-plot(time, filteredData);
-hold on
-plot(time, THRESHOLD*ones(1,length(time)), ...
-     time, -THRESHOLD*ones(1,length(time)));
-plot(i/100, -m, 'o', "Color","blue");
-plot(ii/100, -mm, 'o', "Color",'green')
-plot(II/100,MM,'o', 'Color','red');
-hold off;
+%% Setting the options for the LSTM
+options = trainingOptions('adam', ...
+    'MaxEpochs',60, ...
+    'GradientThreshold',2, ...
+    'Verbose',0, ...
+    'Plots','training-progress');
+
+
+net = trainNetwork(trainingX,trainingY,layers,options);
+
+%YPred = classify(net,XTest{1});
