@@ -5,28 +5,11 @@ close all;
 clc
 addpath("include");
 
-%% MACROS
-NCOLUMNS = 40;
-STARTING_FS = 100;
-
-activities = ["PhaseONE","PhaseTWO","PhaseTHREE", "PhaseFOUR"];
-
-features_avaiable = [
-                       "MEAN"   ,...
-                       "STD"    ,...
-                       "MEDIAN" ,...
-                       "VAR"    ,...
-                       "RANGE"  ,...
-                       "RMS"    ,...
-                       "MODE"   ,...
-                       "MAD"    ];
-
-
 %% DATA IMPORTING
 try
 %     file1 = readtable("data/record_10-11-21_1st_random.csv", 'VariableNamingRule','preserve');
 %     file2 = readtable("data/record_10-11-21_2nd_linAccZ.csv", 'VariableNamingRule','preserve');
-    file1 = readtable("data/record_walk_21-11-21_1st_hips/record_walk_21-11-21_1st_hips.csv",'VariableNamingRule','preserve');
+%     file1 = readtable("data/record_walk_21-11-21_1st_hips/record_walk_21-11-21_1st_hips.csv",'VariableNamingRule','preserve');
     file2 = readtable("data/record_walk_21-11-21_2nd_caviglia/record_walk_21-11-21_2nd_caviglia.csv",'VariableNamingRule','preserve');
     
     disp("Data successfully imported");
@@ -37,57 +20,38 @@ catch ME
     end
 end
 
-
 %% CREATION OF THE DATA STRUCTURE
+time    = file2{:,2};
+mydata  = file2{:,9};
 
-dataset = {file1}; %, file2};
-[time, data] = mergeData(dataset);
-disp("Dataset created");
+%% FILTERING
+[B, A] = butter(3, 0.01,"high");
+ filteredData = filter(B, A,mydata);
 
 %% DATA VISUALIZATION
 
-dataToDisplay = 3;
-
-yyaxis left, plot(time,data(:,dataToDisplay));
+figure(1)
+plot(time,mydata);
 hold on
-yyaxis right,plot(time,data(:,1));
-set(gca, 'YTick', data(1,1):data(end,1));
+plot(time,filteredData);
+hold off
+
+%% Find the MAX | MIN elements
+THRESHOLD = 150;
+[MM, II] = findpeaks(filteredData,'MinPeakHeight', THRESHOLD);
+[mm, ii] = findpeaks(-filteredData,'MinPeakHeight',THRESHOLD);
+
+%% Find the max | min elements
+[M, I] = findpeaks(filteredData, 'MinPeakHeight', THRESHOLD/3);
+[m, i] = findpeaks(-filteredData,'MinPeakHeight', THRESHOLD/3);
+
+%% Plot the peaks
+figure(2)
+plot(time, filteredData);
+hold on
+plot(time, THRESHOLD*ones(1,length(time)), ...
+     time, -THRESHOLD*ones(1,length(time)));
+plot(i/100, -m, 'o', "Color","blue");
+plot(ii/100, -mm, 'o', "Color",'green')
+plot(II/100,MM,'o', 'Color','red');
 hold off;
-
-%% FFT CONVERSION
-[xRange,dataFFT] = freqTransform(data, 0.5);
-
-%% Plot
-dataToDisplay = 3;
-
-figure
-plot(xRange, dataFFT(:,dataToDisplay));
-xlabel('Frequency (Hz)')
-ylabel('Magnitude')
-title('Acceleration FFT')
-
-%% MULTI-LAYER STRUCTURE
-mlData = setMultiLayerStruct(data, NCOLUMNS);
-disp("Multilayer structure created");
-
-%% FEATURE MATRIX
-featuresMatrix = extractFeatures(mlData);
-disp("Feature matrix created");
-
-%% FEATURES TABLE FOR MACHINE LEARNING ALGORITHM (CLASSIFICATION LEARNER)
-featuresTable = featuresTOtable(featuresMatrix,file1.Properties.VariableNames,features_avaiable);
-
-%% TRAINING AND TEST SETS
-[trainingSet, testSet] = splitData(featuresMatrix,0.8);
-disp("Training and test set successfully extracted");
-
-featuresTrainingTable = featuresTOtable(trainingSet,file1.Properties.VariableNames,features_avaiable);
-
-%% CLASSIFICATION LEARNER
-classificationLearner;
-
-%% PREDICTION AND CONFUSION MATRIX
-%trainedModel = load(['output/firstModel.mat']).trainedModel;
-
-%predictions = predict(trainedModel.ClassificationEnsemble, testSet(:,1:end-1)); %all the data except for the actual ID
-%confusionchart(testSet(:,end), predictions)
