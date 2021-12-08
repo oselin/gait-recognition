@@ -7,26 +7,29 @@ function [data] = detectPhases(data)
 %     
 %     %% LOAD 
 %     data = readtable('record_walk_21-11-21_2nd_caviglia.csv');
-    
-    gyro_x = data.("GyroX (deg/s)");
-    gyro_y = data.("GyroY (deg/s)");
-    gyro_z = data.("GyroZ (deg/s)");
-    
-    acc_x = data.("AccX (g)");
-    acc_y = data.("AccY (g)");
-    acc_z = data.("AccZ (g)");
-    
-    l_acc_x = data.("LinAccX (g)");
-    l_acc_y = data.("LinAccY (g)");
-    l_acc_z = data.("LinAccZ (g)");
-    
-    euler_x = data.("EulerX (deg)");
-    euler_y = data.("EulerY (deg)");
-    euler_z = data.("EulerZ (deg)");
-    
-    time = data.("TimeStamp (s)");
-    
-    t = 1:numel(gyro_x);
+    try
+        gyro_x = data.("GyroX (deg/s)");
+        gyro_y = data.("GyroY (deg/s)");
+        gyro_z = data.("GyroZ (deg/s)");
+        
+        acc_x = data.("AccX (g)");
+        acc_y = data.("AccY (g)");
+        acc_z = data.("AccZ (g)");
+        
+        l_acc_x = data.("LinAccX (g)");
+        l_acc_y = data.("LinAccY (g)");
+        l_acc_z = data.("LinAccZ (g)");
+        
+        euler_x = data.("EulerX (deg)");
+        euler_y = data.("EulerY (deg)");
+        euler_z = data.("EulerZ (deg)");
+        
+        time = data.("TimeStamp (s)");
+        
+        t = 1:numel(gyro_x);
+    catch ME
+        disp(ME);
+    end
     
     %% PLOT
     
@@ -82,7 +85,7 @@ function [data] = detectPhases(data)
     
     Y = fft(gyro_z);
     P2 = abs(Y/L);
-    P1 = P2(1:L/2+1);
+    P1 = P2(1:ceil(L/2+1));
     P1(2:end-1) = 2*P1(2:end-1);
     
 %     figure 

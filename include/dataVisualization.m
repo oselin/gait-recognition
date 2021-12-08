@@ -20,17 +20,18 @@ function []= dataVisualization(videoName, startingPoint, labeledData)
     
     %% Get the total labeld time
     last = labeledData{end, 2};
+    labels = labeledData{:,end};
 
     %% Display the video
     if myvideo.Duration < last
         disp("Warning: data overshoots the video");
     end
 
-    for i = 1:last
+    for i = 1:(myvideo.FrameRate*height(labeledData{2701:end,1}))
         frame = readFrame(myvideo);
         hold on;
         myimage = imshow(frame);
-        filter = imshow(mylayers{labeledData(i+1918,1)+1});
+        filter = imshow(mylayers{labels(i)+1});
         filter.AlphaData = 0.2;
         hold off;
         title(sprintf('Current Time = %.3f sec', myvideo.CurrentTime));
