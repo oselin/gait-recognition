@@ -28,7 +28,7 @@ file = detectPhases(file);
 plotLabeledData(file(1:8965,:));
 
 %% Creating the TEST SET and the TRANING SET
-[training, test] = splitData(file,0.8,'rand');
+[training, test] = splitData(file,0.8);
 
 [trainingX, trainingY] = splitLabel(training);
 [testX, testY]         = splitLabel(test);
@@ -59,12 +59,14 @@ testX = transposition(testX);
 testY = transposition(testY,'c');
 
 net = trainNetwork(trainingX,trainingY,layers,options);
+
 %% Plot of the testing data
 figure
 plot(testX{1}')
 xlabel("Time Step")
 legend("Feature " + (1:numFeatures))
 title("Test Data")
+
 %% Prediction of the classes (GAIT PHASES)
 YPred = classify(net,testX{1});
 
