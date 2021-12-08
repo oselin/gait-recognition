@@ -18,8 +18,10 @@ function [matrixTraining, matrixTesting] = splitData(varargin)
     matrixTesting = zeros((len_matrix-lenPercent),width(matrix));
     
     if (nargin == 3 && strcmp(varargin{3},"rand"))
+        disp("Splitting data randomly");
         indexes = randperm(len_matrix,len_matrix-lenPercent); %get random row indexes
     else
+        disp("Splitting data sequentially");
         indexes = (1:len_matrix-lenPercent);
     end
 

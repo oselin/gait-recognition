@@ -28,7 +28,7 @@ file = detectPhases(file);
 plotLabeledData(file(1:8965,:));
 
 %% Creating the TEST SET and the TRANING SET
-[training, test] = splitData(file,0.8);
+[training, test] = splitData(file,0.8,'rand');
 
 [trainingX, trainingY] = splitLabel(training);
 [testX, testY]         = splitLabel(test);
