@@ -75,3 +75,33 @@ acc = sum(YPred == testY{1})./numel(testY{1})
 
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);
+
+%% Setting data properly for unsupervised learning
+Xtrain = training(:,1:end-1);
+Ytrain = training(:,end);
+
+Xtest = test(:,1:end-1);
+Ytest = test(:, end);
+
+%% Unsupervised Learning: k-Means
+[idx, C] = kmeans(Xtrain, ...
+                  4, ...
+                  "Display","final", ...
+                  "Replicates", 30 ...
+                  );
+comp = [idx,Ytrain];
+
+%% Prediction for the unsupervised learning
+[~,idx_test] = pdist2(C,Xtest,'euclidean','Smallest',1);
+
+%acc_kmeans = sum(idx_test==Ytest)/numel(idx_test)
+
+%% Show the results
+N = 1000;
+gscatter(Xtrain(1:N,1),Xtrain(1:N,2),idx(1:N),"rgcb")
+hold on
+plot(C(:,1),C(:,2),'kx')
+gscatter(Xtest(1:N,1),Xtest(1:N,2),idx_test(1:N), "rgcb" ,'o')
+legend('Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster Centroid', ...
+    'Data classified to Cluster 1','Data classified to Cluster 2', ...
+    'Data classified to Cluster 3','Data classified to Cluster 4')
