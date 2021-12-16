@@ -6,11 +6,12 @@ addpath("include");
 
 %% DATA IMPORTING
 try
-    file01 = readtable("data/record_walk_7-12-21_caviglia/personaA4kmh.csv","VariableNamingRule","preserve");
-    file02 = readtable("data/record_walk_7-12-21_caviglia/personaB4kmh.csv","VariableNamingRule","preserve");
-    file03 = readtable("data/record_walk_7-12-21_caviglia/personaC4kmh.csv","VariableNamingRule","preserve");
-    file04 = readtable("data/record_walk_7-12-21_caviglia/personaD4kmh.csv","VariableNamingRule","preserve");
-    file05 = readtable("data/record_walk_7-12-21_caviglia/personaE4kmh.csv","VariableNamingRule","preserve");
+%     file01 = readtable("data/record_walk_7-12-21_caviglia/personaA4kmh.csv","VariableNamingRule","preserve");
+%     file02 = readtable("data/record_walk_7-12-21_caviglia/personaB4kmh.csv","VariableNamingRule","preserve");
+%     file03 = readtable("data/record_walk_7-12-21_caviglia/personaC4kmh.csv","VariableNamingRule","preserve");
+%     file04 = readtable("data/record_walk_7-12-21_caviglia/personaD4kmh.csv","VariableNamingRule","preserve");
+%     file05 = readtable("data/record_walk_7-12-21_caviglia/personaE4kmh.csv","VariableNamingRule","preserve");
+    file01 = load("data\synchedData_IMU_mitch.mat").dataIMU;
     disp("Data successfully imported");
 catch ME
     if strcmp(ME.identifier, 'MATLAB:textio:textio:FileNotFound')
@@ -19,7 +20,8 @@ catch ME
     end
 end
 %% Merging all the acquired data
-[~, file]= mergeData({file01, file02, file03, file04, file05}, 'remove');
+%[~, file]= mergeData({file01, file02, file03, file04, file05}, 'remove');
+[~, file]= mergeData({file01}, 'remove');
 
 %% Adding LABELS by threshold method
 file = detectPhases(file);
@@ -54,9 +56,9 @@ options = trainingOptions('adam', ...
     'Plots','training-progress');
 
 trainingX = transposition(trainingX);
-trainingY = transposition(trainingY,'c');
+trainingY = transposition(trainingY,'categorical');
 testX = transposition(testX);
-testY = transposition(testY,'c');
+testY = transposition(testY,'categorical');
 
 net = trainNetwork(trainingX,trainingY,layers,options);
 

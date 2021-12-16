@@ -3,25 +3,25 @@ function [cluster] = clusterData(data)
     if (isa(data,'table'))
         data = data{:,:};
     end
-    n = unique(data(:,end));
-
+    n = length(unique(data(:,end)));
+    
+    %if unclassified data are present, get the classes size properly
     if ismember(0,n)
         n = length(n) - 1;
-    else
-        n = length(n);
     end
-
+    %defining the data structure [cell type]
     cluster = cell(n,1);
-    len = zeros(1,n);
+
+    %Setting the full data structure
     for i=1:n
-        len(i) = sum(data(:,end) == i);
-        cluster{i,1} = zeros(len(i), width(data));
+        buffer = sum(data(:,end) == i);
+        cluster{i,1} = zeros(buffer, width(data));
     end
     
     counter = ones(1,n);
     for i = 1:height(data)
         myindex = data(i,end);
-        if (myindex)
+        if (myindex) %if row has been classified
             cluster{myindex,1}(counter(myindex),:) = data(i,:);
             counter(myindex) = counter(myindex) + 1;
         end
