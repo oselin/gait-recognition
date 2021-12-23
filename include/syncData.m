@@ -1,72 +1,98 @@
-% function [] = syncData()
-clc
-clear all
-close all
-file01 = load("../data/synchedData_IMU_mitch.mat");
-file02 = readtable("../data/record_lab_15-12-21/mitch_1_1.txt","VariableNamingRule","preserve");
-file03 = readtable("../data/record_lab_15-12-21/mitch_1_3.txt","VariableNamingRule","preserve");
+function [syncr] = syncData(DATA)
+    
+    %DATA must be in the following form:
+    %DATA = {IMU_file{:,6}, MITCH_FILE{:,4}, MITCH_FILE{:,4}};
+    LEN = length(DATA);
+    
+    %% TO IMPLEMENT: AUTOMATICALLY GET THE BAND-PASS FILTERING FREQUENCY LOOKING
+     % AT FFTs
+         %%
+%     fs = 100;
+%     fN = fs/2;
+%     n = length(DATA{1});
+%     ff = (0:fs/n:fN);
+%     y = fft(DATA{i});
+%     
+%     myfft = abs(y(1:(ceil((n+1)/2))));
+%     plot(ff, myfft);
 
-data = {file01{:,6}, file02{:,4}, file03{:,4}};
-for i=13:28
-    plot(1:height(file03{:,i}),file03{:,i});
-    hold on
-end
-% fs = 100;
-% [B,A] = butter(5,0.1,"high");
-%     for i = 1:length(data)
-%         fN = fs/2;
-%         n = length(data{i});
-%         myfft = fft(data{i})/n;
-%         myfft = filter(B,A,myfft);
-%         myfft = abs(myfft(1:(ceil((n+1)/2))));
-%         
-%         figure(i);
-%         ff = (0:fs/n:fN)/fN;
-%         plot(ff, myfft);
+    %% GET THE SHORTEST LOG
+    END = length(DATA{1});
+    for i = 2:LEN
+        buffer = length(DATA{i});
+        if buffer < END
+            END = buffer;
+        end
+    end
+    
+    %% NORMALIZATION
+    for i = 1:LEN
+        DATA{i} = DATA{i}/range(DATA{i});
+    end
+    
+    %% FILTERING
+    FILTERED_DATA = cell(1, LEN);
+    [B,A] = butter(4,[0.02 0.1]);
+    for i= 1:LEN
+        FILTERED_DATA{i} = filter(B,A,DATA{i});
+    end
+    
+    %% FIND THE VERY MAX
+    maxes = zeros(1,LEN);
+    for i = 1:LEN
+        [~, maxes(i)] = max(FILTERED_DATA{i}(1:END/3));
+    end
+    
+    %% PLOT
+%     figure(1)
+%     for i = 1:LEN
+%         plot(1:END,DATA{i}(1:END));
+%         hold on;
+%         xline(maxes(i));
 %     end
-% 
-% 
-% %%
-% 
-% clear all;
-% close all;
-% clc;
-% file01 = readtable("../data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
-% file02 = readtable("../data/record_lab_15-12-21/mitch_1_1.txt","VariableNamingRule","preserve");
-% file03 = readtable("../data/record_lab_15-12-21/mitch_2_1.txt","VariableNamingRule","preserve");
-% 
-% % ffile01 = file01{:,6};% - mean(file01{:,6});
-% % ffile02 = file02{:,4};% - mean(file02{:,4});
-% % ffile03 = file03{:,4};% - mean(file03{:,4});
-% 
-% ffile01 = (file01{:,6})/range(file01{:,6});
-% ffile02 = (file02{:,4})/range(file02{:,4});
-% ffile03 = (file03{:,4})/range(file03{:,4});
-% disp("filtered");
-% [p1, off1] = max(ffile01);
-% [p2, off2] = max(ffile02);
-% [p3, off3] = max(ffile03);
-% disp("max found");
-% 
-% LEN = min([height(file01),height(file02), height(file03)]);
-% disp("plotting...");
-% figure(1)
-% %plot(1:LEN,ffile01(1:LEN),'Color','b');
-% xlim([0,4e4]);
-% hold on
-% % figure(2)
-% plot(1:LEN,ffile02(1:LEN)/6000,'Color','y');
-% xlim([0,4e4]);
-% % figure(3)
-% plot(1:LEN,ffile03(1:LEN)/4000,'Color','r');
-% xlim([0,4e4]);
-% % yline(p1);
-% % yline(p2/6000);
-% % yline(p3/4000);
-
-
-
-
-
-% 
-% end
+%     hold off; legend(strcat('Data ',num2str((1:i)')))
+%     
+%     figure(2)
+%     for i = 1:LEN
+%         plot(1:END,FILTERED_DATA{i}(1:END));
+%         hold on;
+%         xline(maxes(i));
+%     end
+%     hold off; legend(strcat('Data ',num2str((1:i)')))
+    
+    %% SYNCHRONIZE DATA
+    l = END - max(maxes);
+    syncr = zeros(l,LEN);
+    
+    for i = 1:LEN
+        syncr(:,i) = DATA{i}(maxes(i):l+maxes(i)-1);
+    end
+    
+     %% PLOT SYNCHRONIZED DATA
+%     figure(3);
+%     for i = 1:LEN
+%         plot(1:l,syncr(:,i));
+%         hold on;
+%     end
+%     hold off; legend(strcat('Data ',num2str((1:i)')))
+    
+     %% ESTIMATE THE TOTAL DELAY
+%     [~, latest] =min(maxes);
+%     
+%     disp("The latest sensor to be turned on is " + num2str(latest));
+%     file01{maxes(1),2};
+%     (file03{maxes(3),1} - file02{maxes(2),1})/1000
+%     % fprintf(num2str(file02{maxes(2),1}), '.16g');
+%     % fprintf('\n');
+%     % fprintf(num2str(file02{maxes(2)+1,1}), '.16g');
+    
+     %% PLOT FILTERED AND UNFILTERED DATA
+%     
+%     for i = 1:LEN
+%         figure(i+10);
+%         plot(1:length(DATA{i}),DATA{i});
+%         hold on;
+%         plot(1:length(DATA{i}),FILTERED_DATA{i});
+%         xline(maxes(i));
+%     end
+end

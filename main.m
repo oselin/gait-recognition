@@ -11,7 +11,7 @@ try
 %     file03 = readtable("data/record_walk_7-12-21_caviglia/personaC4kmh.csv","VariableNamingRule","preserve");
 %     file04 = readtable("data/record_walk_7-12-21_caviglia/personaD4kmh.csv","VariableNamingRule","preserve");
 %     file05 = readtable("data/record_walk_7-12-21_caviglia/personaE4kmh.csv","VariableNamingRule","preserve");
-    file01 = load("data\synchedData_IMU_mitch.mat").dataIMU;
+    file01 = readtable("data/record_lab_15-12-21_working/IMU.csv", "VariableNamingRule","preserve");
     disp("Data successfully imported");
 catch ME
     if strcmp(ME.identifier, 'MATLAB:textio:textio:FileNotFound')
@@ -24,7 +24,7 @@ end
 [~, file]= mergeData({file01}, 'remove');
 
 %% Adding LABELS by threshold method
-file = detectPhases(file);
+file = detectPhases_new(file);
 
 %% Plot labeled data
 plotLabeledData(file(1:8965,:));
