@@ -40,7 +40,7 @@ file05 = detectPhases_new_2(file05);
 plotLabeledData(file(1:8965,:));
 
 %% Creating the TEST SET and the TRANING SET
-% [training, test] = splitData(file,0.8);
+%[training, test] = splitData(file,0.8);
 
 training = file;
 test = file05;
@@ -72,7 +72,7 @@ trainingX = transposition(trainingX);
 trainingY = transposition(trainingY,'categorical');
 testX = transposition(testX);
 testY = transposition(testY,'categorical');
-
+%%
 net = trainNetwork(trainingX,trainingY,layers,options);
 
 %% Plot of the testing data
@@ -90,12 +90,18 @@ for i = 1:length(testX)
 end
 
 %% Accuracy of the network
-acc = sum(YPred == testY{1})./numel(testY{1})
+%acc = sum(YPred == testY{1})./numel(testY{1})
 
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);
 
 %% Setting data properly for unsupervised learning
+if isa(training, 'table')
+    training = training{:,:};
+end
+if isa(test, 'table')
+    test = test{:,:};
+end
 Xtrain = training(:,1:end-1);
 Ytrain = training(:,end);
 
