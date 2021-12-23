@@ -6,12 +6,10 @@ addpath("include");
 
 %% DATA IMPORTING
 try
-%     file01 = readtable("data/record_walk_7-12-21_caviglia/personaA4kmh.csv","VariableNamingRule","preserve");
-%     file02 = readtable("data/record_walk_7-12-21_caviglia/personaB4kmh.csv","VariableNamingRule","preserve");
-%     file03 = readtable("data/record_walk_7-12-21_caviglia/personaC4kmh.csv","VariableNamingRule","preserve");
-%     file04 = readtable("data/record_walk_7-12-21_caviglia/personaD4kmh.csv","VariableNamingRule","preserve");
-%     file05 = readtable("data/record_walk_7-12-21_caviglia/personaE4kmh.csv","VariableNamingRule","preserve");
     file01 = readtable("data/record_lab_15-12-21_working/IMU.csv", "VariableNamingRule","preserve");
+    file02 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
+    file03 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
+    file04 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
     disp("Data successfully imported");
 catch ME
     if strcmp(ME.identifier, 'MATLAB:textio:textio:FileNotFound')
@@ -19,12 +17,16 @@ catch ME
         return;
     end
 end
+file = {file01, file02, file03, file04};
+%% Adding LABELS by threshold method
+%file{1} = detectPhases_new(file{1});
+for i = 1:length(file)
+    file{i} = detectPhases_new(file{i});
+end
+
 %% Merging all the acquired data
 %[~, file]= mergeData({file01, file02, file03, file04, file05}, 'remove');
-[~, file]= mergeData({file01}, 'remove');
-
-%% Adding LABELS by threshold method
-file = detectPhases_new(file);
+[~, file]= mergeData(file, 'remove');
 
 %% Plot labeled data
 plotLabeledData(file(1:8965,:));
