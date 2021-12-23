@@ -1,0 +1,2 @@
+MainPackage=C:\rbrtWorkspace\221e\Devel\Mitch\software\Mitch_SDK\Mitch_ToyApp_UWP\bin\x86\Release\Mitch_ToyApp_UWP_1.0.0.0_x86.appx
+SymbolPackage=C:\rbrtWorkspace\221e\Devel\Mitch\software\Mitch_SDK\Mitch_ToyApp_UWP\obj\x86\Release\Symbols\Mitch_ToyApp_UWP_1.0.0.0_x86.appxsym

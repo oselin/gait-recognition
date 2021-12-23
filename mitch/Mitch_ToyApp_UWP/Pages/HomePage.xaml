@@ -1,0 +1,146 @@
+﻿<Page
+    x:Class="_221e.Mitch_ToyApp_UWP.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:_221e.Mitch_ToyApp_UWP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <local:InvertConverter x:Key="InvertConverter"/>
+        <DataTemplate x:Key="ResultsListViewTemplate" x:DataType="local:BluetoothLEDeviceDisplay">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" MinWidth="100" />
+                </Grid.ColumnDefinitions>
+                <!--<CheckBox x:Name="CBSelectedDevice" IsChecked="{Binding IsSelected, Mode=TwoWay}"/>-->
+                <StackPanel Grid.Column="2" Margin="5" >
+                    <TextBlock FontSize="12">
+                        Name: <Run Text="{x:Bind Name, Mode=OneWay}" FontWeight="Bold" FontSize="12"/>
+                    </TextBlock>
+                    <TextBlock FontSize="12">
+                        IsPaired: <Run Text="{x:Bind IsPaired, Mode=OneWay}" FontSize="12"/>, IsConnected: <Run Text="{x:Bind IsConnected, Mode=OneWay}" FontSize="12"/> , IsConnectable:<Run Text="{x:Bind IsConnectable, Mode=OneWay}" FontSize="12"/>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="ConnectedListViewTemplate" x:DataType="local:NetworkNode">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" MinWidth="100" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="2" Margin="5">
+                    <TextBlock FontSize="12">
+                        <Run Text="{x:Bind DeviceName, Mode=OneWay}" FontWeight="Bold" FontSize="12"/>, <Run Text="{x:Bind DeviceStatus, Mode=OneWay}" FontSize="12"/>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+    <Grid x:Name="hpContainer">
+        <TextBlock Text="Home BLE" Style="{ThemeResource HeaderTextBlockStyle}" VerticalAlignment="Top" HorizontalAlignment="Center"/>
+
+        <!-- DEVICE ENUMERATION -->
+        <TextBox x:Name="LblDeviceEnumeration" PlaceholderText="Device Enumeration:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="300,90,0,0" Width="213" FontSize="12" IsReadOnly="True" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0" Background="{x:Null}" Height="30" RenderTransformOrigin="0.063,-1.928" BorderBrush="{x:Null}"/>
+        <ScrollViewer VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto"
+                      BorderBrush="#FF30869B" BorderThickness="1" Height="303" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="#FFF0F0F0" Width="560" Margin="300,125,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <ListView x:Name="ResultsListView" x:FieldModifier="public" IsMultiSelectCheckBoxEnabled="true"
+                      ItemTemplate="{StaticResource ResultsListViewTemplate}"
+                      ItemsSource="{x:Bind mpRef.KnownDevices, Mode=OneWay}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Height="250" SelectionMode="Multiple"/>
+        </ScrollViewer>
+        <Button x:Name="BtnEnumerate" Content="Start Search" HorizontalAlignment="Left" Height="32" VerticalAlignment="Top" Width="120" FontSize="12" Margin="300,433,0,0" d:LayoutOverrides="VerticalAlignment" Click="BtnEnumerate_Click" />
+
+        <!-- PAIRING / CONNECTION COMMANDS -->
+        <Button x:Name="BtnPair" Click="BtnPair_Click" Content="Pair" HorizontalAlignment="Left" Height="32" Margin="525,433,0,0" VerticalAlignment="Top" Width="80" FontSize="12" />
+        <Button x:Name="BtnConnect" Click="BtnConnect_Click" Content="Connect" HorizontalAlignment="Left" Height="32" Margin="610,433,0,0" VerticalAlignment="Top" Width="80" FontSize="12" />
+        <Button x:Name="BtnShutdown" Click="BtnShutdown_Click" Content="Shutdown" HorizontalAlignment="Left" Margin="695,433,0,0" VerticalAlignment="Top" Width="80" FontSize="12" Height="32"/>
+        <Button x:Name="BtnResetAll" Click="BtnResetAll_Click" Content="Reset All" HorizontalAlignment="Left" Margin="780,433,0,0" VerticalAlignment="Top" Width="80" FontSize="12" Height="32" />
+
+        <!-- CONNECTED DEVICES -->
+        <TextBox x:Name="LblConnectedDevices" PlaceholderText="Connected Devices:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="941,90,0,0" Width="223" FontSize="12" IsReadOnly="True" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0" Background="{x:Null}" Height="30" RenderTransformOrigin="0.063,-1.928" BorderBrush="{x:Null}"/>
+        <ListView x:Name="LV_NetworkNodes" x:FieldModifier="public"
+                  IsMultiSelectCheckBoxEnabled="true" SelectionMode="Multiple"
+                  ItemTemplate="{StaticResource ConnectedListViewTemplate}" 
+                  ItemsSource="{x:Bind mpRef.BLENetwork, Mode=OneWay}"
+                  Margin="942,125,0,0" Height="152" Width="385" 
+                  HorizontalAlignment="Left" VerticalAlignment="Top">
+        </ListView>
+
+        <Button x:Name="BtnWrite" Content="Write" Width="120" Height="32" HorizontalAlignment="Left" Margin="941,285,0,0" VerticalAlignment="Top" FontSize="12" FontWeight="Bold" Click="BtnWrite_Click"/>
+        <TextBox x:Name="LblWrite" x:FieldModifier="public" PlaceholderText="Message to be sent" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1076,285,0,0" Width="250" Height="32" FontSize="10" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0"/>
+        <Button x:Name="BtnRead" IsEnabled="false" Content="Read" Width="120" Height="32" HorizontalAlignment="Left" Margin="941,322,0,0" VerticalAlignment="Top" FontSize="12" FontWeight="Bold"/>
+        <TextBox x:Name="LblRead" x:FieldModifier="public" PlaceholderText="Received message" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1076,322,0,0" Width="250" Height="32" FontSize="8" Background="#FFF0F0F0" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0" IsReadOnly="True" BorderBrush="#66000000"/>
+
+        <!--<Button x:Name="BtnGetState" Content="Get State" Click="BtnGetState_Click" Width="120" Height="32" HorizontalAlignment="Left" Margin="941,359,0,0" VerticalAlignment="Top" FontSize="12"/>-->
+        <!--<TextBox x:Name="LblCurrentState" x:FieldModifier="public" PlaceholderText="Current state" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1076,359,0,0" Width="250" Height="32" FontSize="10" IsReadOnly="True" Background="#FFF0F0F0" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0"/>-->
+
+        <Button x:Name="BtnRestart" Content="Restart" Width="120" Height="32" HorizontalAlignment="Left" Margin="941,396,0,0" VerticalAlignment="Top" FontSize="12" Click="BtnRestart_Click"/>
+        <RadioButton x:Name="RBNormal" Content="Normal" HorizontalAlignment="Left" Margin="1076,396,0,0" VerticalAlignment="Top" IsChecked="True" Width="100" FontSize="12" Height="32"/>
+        <RadioButton x:Name="RBBootloader" Content="Bootloader" HorizontalAlignment="Left" Margin="1179,396,0,0" VerticalAlignment="Top" FontSize="12" Width="100" Height="32"/>
+
+        <Button x:Name="BtnGetBatteryCharge" Content="Battery Charge" Click="BtnGetBatteryCharge_Click" Width="120" HorizontalAlignment="Left" Margin="941,433,0,0" VerticalAlignment="Top" FontSize="12" Height="32"/>
+        <TextBox x:Name="LblBatteryCharge" x:FieldModifier="public" PlaceholderText="Battery Charge" HorizontalAlignment="Left" Margin="1076,433,0,0" Width="250" FontSize="10" IsReadOnly="True" Background="#FFF0F0F0" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0" Height="32" VerticalAlignment="Top"/>
+        <Button x:Name="BtnGetBatteryVoltage" Content="Battery Voltage" Click="BtnGetBatteryVoltage_Click" Width="120" HorizontalAlignment="Left" Margin="941,470,0,0" VerticalAlignment="Top" FontSize="12" d:LayoutOverrides="VerticalAlignment" Height="32"/>
+        <TextBox x:Name="LblBatteryVoltage" x:FieldModifier="public" PlaceholderText="Battery Voltage" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1076,470,0,0" Width="250" FontSize="10" IsReadOnly="True" Background="#FFF0F0F0" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0" d:LayoutOverrides="VerticalAlignment"/>
+
+        <Button x:Name="BtnGetTime" Content="Get Time" Click="BtnGetTime_Click" Width="120" HorizontalAlignment="Left" Margin="941,508,0,0" VerticalAlignment="Top" FontSize="12" Height="32" d:LayoutOverrides="VerticalAlignment"/>
+        <TextBox x:Name="LblCurrentTime" x:FieldModifier="public" PlaceholderText="Current Date/Time" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1076,508,0,0" Width="250" FontSize="10" IsReadOnly="True" Background="#FFF0F0F0" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0" d:LayoutOverrides="VerticalAlignment"/>
+
+        <Button x:Name="BtnMemoryControl" Content="Memory Info" Click="BtnMemoryControl_Click" Width="120" HorizontalAlignment="Left" Margin="941,545,0,0" VerticalAlignment="Top" FontSize="12" Height="32" />
+        <TextBox x:Name="LblMemoryControl" x:FieldModifier="public" PlaceholderText="Memory State" HorizontalAlignment="Left" Margin="1076,546,0,0" Width="250" FontSize="10" TextWrapping="NoWrap" VerticalContentAlignment="Center" Padding="5,5,0,0" BorderThickness="1,1,1,1" Height="32" VerticalAlignment="Top"/>
+        <Button x:Name="BtnEraseMemory" Content="Erase Memory" Click="BtnEraseMemory_Click" Width="120" HorizontalAlignment="Left" Margin="941,583,0,0" VerticalAlignment="Top" FontSize="12" Height="32"/>
+        <Button x:Name="BtnFileInfo" Content="File Info" Click="BtnFileInfo_Click" Width="120" HorizontalAlignment="Left" Margin="941,621,0,0" VerticalAlignment="Top" FontSize="12" Height="32"/>
+        <TextBox x:Name="LblFileInfoIndex" x:FieldModifier="public" PlaceholderText="Selected file index" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1076,620,0,0" Width="250" FontSize="10" TextWrapping="NoWrap" VerticalContentAlignment="Center" Padding="5,5,0,0" BorderThickness="1,1,1,1"/>
+        <TextBox x:Name="LblCurrentFileInfo" x:FieldModifier="public" IsReadOnly="true" PlaceholderText="File info" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="941,660,0,0" Width="385" FontSize="12" TextWrapping="Wrap" VerticalContentAlignment="Center" Padding="5,5,0,0" BorderThickness="1,1,1,1" Height="74"/>
+
+        <TextBox x:Name="LblAcquisitionSetup" PlaceholderText="Acquisition:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="300,550,0,0" Width="223" FontSize="12" IsReadOnly="True" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0" BorderBrush="{x:Null}" Background="{x:Null}" RenderTransformOrigin="0.063,-1.928"/>
+        <ComboBox x:Name="CBLogMode" PlaceholderText="LOG Acquisition Modes" 
+                      DisplayMemberPath="Name" HorizontalAlignment="Left" MinWidth="0" FontSize="12" VerticalAlignment="Top" Margin="300,584,0,0" Width="193" SelectionChanged="CBLogMode_SelectionChanged">
+            <ComboBoxItem Content="IMU"/>
+            <ComboBoxItem Content="IMU + INSOLE"/>
+            <ComboBoxItem Content="ALL"/>
+            <ComboBoxItem Content="IMU [Timestamp]"/>
+            <ComboBoxItem Content="IMU + INSOLE [Timestamp]"/>
+            <ComboBoxItem Content="ALL [Timestamp]"/>
+        </ComboBox>
+        <ComboBox x:Name="CBLogFreq" PlaceholderText="Freq" 
+                      DisplayMemberPath="Name" HorizontalAlignment="Left" MinWidth="0" FontSize="12" VerticalAlignment="Top" Margin="498,584,0,0" SelectionChanged="CBLogFreq_SelectionChanged">
+            <ComboBoxItem Content="25"/>
+            <ComboBoxItem Content="50"/>
+            <ComboBoxItem Content="100"/>
+            <ComboBoxItem Content="200"/>
+            <ComboBoxItem Content="500"/>
+            <ComboBoxItem Content="1000"/>
+        </ComboBox>
+        <TextBox x:Name="LblLogHz" PlaceholderText="Hz" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="571,585,0,0" Width="43" FontSize="12" IsReadOnly="True" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0" d:LayoutOverrides="HorizontalAlignment" BorderBrush="{x:Null}" Background="{x:Null}" RenderTransformOrigin="0.063,-1.928"/>
+        <Button x:Name="BtnStartLog" Content="Start Log" HorizontalAlignment="Left" Margin="615,584,0,0" VerticalAlignment="Top" Width="120" FontSize="12" Click="BtnStartLog_Click" Height="32"/>
+        <Button x:Name="BtnStopLog" Content="Stop Log" HorizontalAlignment="Left" Margin="740,584,0,0" VerticalAlignment="Top" Width="120" FontSize="12" Click="BtnStopLog_Click" Height="32"/>
+        <ComboBox x:Name="CBStreamMode" PlaceholderText="STREAM Acquisition Modes" IsEnabled="true"
+                      DisplayMemberPath="Name" HorizontalAlignment="Left" MinWidth="0" FontSize="12" VerticalAlignment="Top" Margin="300,623,0,0" Width="193" SelectionChanged="CBStreamMode_SelectionChanged" Visibility="Visible">
+            <ComboBoxItem Content="PRESSURE"/>
+            <ComboBoxItem Content="6DOF + TOF"/>
+            <ComboBoxItem Content="TOF"/>
+            <ComboBoxItem Content="6DOF"/>
+            <ComboBoxItem Content="9DOF"/>
+            <!--<ComboBoxItem Content="ORIENTATION"/>-->
+        </ComboBox>
+        <ComboBox x:Name="CBStreamFreq" PlaceholderText="Freq" IsEnabled="true"
+                      DisplayMemberPath="Name" HorizontalAlignment="Left" MinWidth="0" FontSize="12" VerticalAlignment="Top" Margin="498,623,0,0" SelectionChanged="CBStreamFreq_SelectionChanged" Visibility="Visible">
+            <ComboBoxItem Content="5"/>
+            <ComboBoxItem Content="10"/>
+            <ComboBoxItem Content="25"/>
+            <ComboBoxItem Content="50"/>
+        </ComboBox>
+        <TextBox x:Name="LblStreamHz" PlaceholderText="Hz" IsEnabled="true" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="572,625,0,0" Width="43" FontSize="12" IsReadOnly="True" TextWrapping="NoWrap" VerticalContentAlignment="Center" BorderThickness="1,1,1,1" Padding="5,5,0,0" d:LayoutOverrides="HorizontalAlignment" BorderBrush="{x:Null}" Background="{x:Null}" Height="30" RenderTransformOrigin="0.063,-1.928" Visibility="Visible"/>
+        <Button x:Name="BtnStartStream" Content="Start Streaming" IsEnabled="true" HorizontalAlignment="Left" Margin="615,621,0,0" VerticalAlignment="Top" Width="120" Height="32" FontSize="12" Click="BtnStartStream_Click" Visibility="Visible"/>
+        <Button x:Name="BtnStopStream" Content="Stop Streaming" IsEnabled="true" HorizontalAlignment="Left" Margin="740,621,0,0" VerticalAlignment="Top" Width="120" Height="32" FontSize="12" Click="BtnStopStream_Click" Visibility="Visible"/>
+        <TextBox x:Name="LblCurrentStream1" x:FieldModifier="public" IsEnabled="true" IsReadOnly="true" PlaceholderText="Stream content" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="300,660,0,0" Width="560" FontSize="12" TextWrapping="Wrap" VerticalContentAlignment="Center" Padding="5,5,0,0" BorderThickness="1,1,1,1" Height="32" Visibility="Visible"/>
+        <!--<TextBox x:Name="LblCurrentStream2" x:FieldModifier="public" IsEnabled="true" IsReadOnly="true" PlaceholderText="Stream content #2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="300,703,0,0" Width="560" FontSize="12" TextWrapping="Wrap" VerticalContentAlignment="Center" Padding="5,5,0,0" BorderThickness="1,1,1,1" Height="32" Visibility="Visible"/>
+        <controls:DataGrid  x:Name="GridViewFileInfo" Height="100" Margin="412,546,1055,434" AutoGenerateColumns="True" ItemsSource="{x:Bind local:SelectedFile}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>-->
+    </Grid>
+</Page>
