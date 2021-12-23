@@ -21,7 +21,9 @@ file = {file01, file02, file03, file04};
 %% Adding LABELS by threshold method
 %file{1} = detectPhases_new(file{1});
 for i = 1:length(file)
-    file{i} = detectPhases_new(file{i});
+    file{i} = detectPhases(file{i});
+%     file{i} = removevars(file{i}, "gyro_z_filt");
+%     file{i} = removevars(file{i}, "gyro_z_heavy_filt");
 end
 
 %% Merging all the acquired data
@@ -72,8 +74,12 @@ legend("Feature " + (1:numFeatures))
 title("Test Data")
 
 %% Prediction of the classes (GAIT PHASES)
-YPred = classify(net,testX{1});
-
+for i = 1:length(testX)
+    YPred = classify(net,testX{i});
+    acc = sum(YPred == testY{i})./numel(testY{i});
+    disp("Accuracy for phase "+ num2str(i)+": " + num2str(acc));
+end
+return;
 %% Accuracy of the network
 acc = sum(YPred == testY{1})./numel(testY{1})
 
