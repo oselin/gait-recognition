@@ -1,5 +1,8 @@
 function [unlabeled_data, label] = splitLabel(data)
     
+    if (isa(data, 'table'))
+        data = data{:,:};
+    end
     n = length(unique(data(:,end))) - 1;
 
     label = cell(n,1);

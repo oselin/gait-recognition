@@ -6,10 +6,18 @@ addpath("include");
 
 %% DATA IMPORTING
 try
-    file01 = readtable("data/record_lab_15-12-21_working/IMU.csv", "VariableNamingRule","preserve");
-    file02 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
-    file03 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
-    file04 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
+%     file01 = readtable("data/record_lab_15-12-21_working/IMU.csv", "VariableNamingRule","preserve");
+%     file02 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
+%     file03 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
+%     file04 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
+    file01 = readtable('data/record_walk_7-12-21_caviglia/personaA4kmh.csv', "VariableNamingRule","preserve");
+    file02 = readtable('data/record_walk_7-12-21_caviglia/personaB4kmh.csv', "VariableNamingRule","preserve");
+    file03 = readtable('data/record_walk_7-12-21_caviglia/personaC4kmh.csv', "VariableNamingRule","preserve");
+    file04 = readtable('data/record_walk_7-12-21_caviglia/personaD4kmh.csv', "VariableNamingRule","preserve");
+    file05 = readtable('data/record_walk_7-12-21_caviglia/personaE4kmh.csv', "VariableNamingRule","preserve");
+%     file06 = readtable('data/record_lab_15-12-21/IMU_1.csv', "VariableNamingRule","preserve");
+%     file07 = readtable('data/record_lab_15-12-21/IMU_2.csv', "VariableNamingRule","preserve");
+%     file08 = readtable('data/record_lab_15-12-21/IMU_3.csv', "VariableNamingRule","preserve");
     disp("Data successfully imported");
 catch ME
     if strcmp(ME.identifier, 'MATLAB:textio:textio:FileNotFound')
@@ -18,23 +26,24 @@ catch ME
     end
 end
 file = {file01, file02, file03, file04};
-%% Adding LABELS by threshold method
-%file{1} = detectPhases_new(file{1});
-for i = 1:length(file)
-    file{i} = detectPhases(file{i});
-%     file{i} = removevars(file{i}, "gyro_z_filt");
-%     file{i} = removevars(file{i}, "gyro_z_heavy_filt");
-end
 
+%% Adding LABELS by threshold method
+for i = 1:length(file)
+    file{i} = detectPhases_new_2(file{i});
+end
+file05 = detectPhases_new_2(file05);
+[~, file05] = mergeData({file05}, 'remove');
 %% Merging all the acquired data
-%[~, file]= mergeData({file01, file02, file03, file04, file05}, 'remove');
 [~, file]= mergeData(file, 'remove');
 
 %% Plot labeled data
 plotLabeledData(file(1:8965,:));
 
 %% Creating the TEST SET and the TRANING SET
-[training, test] = splitData(file,0.8);
+% [training, test] = splitData(file,0.8);
+
+training = file;
+test = file05;
 
 [trainingX, trainingY] = splitLabel(training);
 [testX, testY]         = splitLabel(test);
@@ -79,7 +88,7 @@ for i = 1:length(testX)
     acc = sum(YPred == testY{i})./numel(testY{i});
     disp("Accuracy for phase "+ num2str(i)+": " + num2str(acc));
 end
-return;
+
 %% Accuracy of the network
 acc = sum(YPred == testY{1})./numel(testY{1})
 
