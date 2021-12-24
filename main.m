@@ -6,10 +6,6 @@ addpath("include");
 
 %% DATA IMPORTING
 try
-%     file01 = readtable("data/record_lab_15-12-21_working/IMU.csv", "VariableNamingRule","preserve");
-%     file02 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
-%     file03 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
-%     file04 = readtable("data/record_lab_15-12-21/IMU_1.csv", "VariableNamingRule","preserve");
     file01 = readtable('data/record_walk_7-12-21_caviglia/personaA4kmh.csv', "VariableNamingRule","preserve");
     file02 = readtable('data/record_walk_7-12-21_caviglia/personaB4kmh.csv', "VariableNamingRule","preserve");
     file03 = readtable('data/record_walk_7-12-21_caviglia/personaC4kmh.csv', "VariableNamingRule","preserve");
@@ -63,16 +59,16 @@ layers = [ ...
 
 %% -Setting the options for the LSTM
 options = trainingOptions('adam', ...
-    'MaxEpochs',60, ...
-    'GradientThreshold',2, ...
-    'Verbose',0, ...
+    'MaxEpochs', 60, ...
+    'GradientThreshold', 2, ...
+    'Verbose', 0, ...
     'Plots','training-progress');
 
 trainingX = transposition(trainingX);
 trainingY = transposition(trainingY,'categorical');
 testX = transposition(testX);
 testY = transposition(testY,'categorical');
-%%
+
 net = trainNetwork(trainingX,trainingY,layers,options);
 
 %% Plot of the testing data
@@ -82,15 +78,12 @@ xlabel("Time Step")
 legend("Feature " + (1:numFeatures))
 title("Test Data")
 
-%% Prediction of the classes (GAIT PHASES)
+%% Prediction of the classes (GAIT PHASES) and ACCURACY
 for i = 1:length(testX)
     YPred = classify(net,testX{i});
-    acc = sum(YPred == testY{i})./numel(testY{i});
+    acc = sum(YPred == testY{i})/numel(testY{i});
     disp("Accuracy for phase "+ num2str(i)+": " + num2str(acc));
 end
-
-%% Accuracy of the network
-%acc = sum(YPred == testY{1})./numel(testY{1})
 
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);
@@ -119,14 +112,15 @@ comp = [idx,Ytrain];
 %% Prediction for the unsupervised learning
 [~,idx_test] = pdist2(C,Xtest,'euclidean','Smallest',1);
 
-%acc_kmeans = sum(idx_test==Ytest)/numel(idx_test)
+acc_kmeans = sum(idx_test==Ytest')./numel(idx_test);
+disp("Unsupervised [kMeans] accuracy: " + num2str(acc_kmeans));
 
 %% Show the results
-N = 1000;
-gscatter(Xtrain(1:N,1),Xtrain(1:N,2),idx(1:N),"rgcb")
+N = 1:9900;
+gscatter(Xtrain(N,7),Xtrain(N,8),idx(N)',"rgcb")
 hold on
 plot(C(:,1),C(:,2),'kx')
-gscatter(Xtest(1:N,1),Xtest(1:N,2),idx_test(1:N), "rgcb" ,'o')
+gscatter(Xtest(N,7),Xtest(N,8),idx_test(N)', "rgcb" ,'o')
 legend('Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster Centroid', ...
     'Data classified to Cluster 1','Data classified to Cluster 2', ...
     'Data classified to Cluster 3','Data classified to Cluster 4')
