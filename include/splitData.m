@@ -1,4 +1,15 @@
 function [matrixTraining, matrixTesting] = splitData(varargin)
+    %% --------------------------------------------------------------------
+    %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+    %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
+    %
+    %   SPLIT DATA FUNCTION
+    % ---------------------------------------------------------------------
+
+    if (nargin <= 1)
+        disp("Some parameters are missing. Please check your inputs");
+        return
+    end
     matrix      = varargin{1};
     percSplit   = varargin{2};
     
@@ -6,14 +17,17 @@ function [matrixTraining, matrixTesting] = splitData(varargin)
         disp("The split index must be within 0 and 1");
         return;
     end
-
+    
+    % I need to manipulate matrices, not table. So convert it to matrix
     if (isa(matrix, 'table'))
         matrix = matrix{:,4:end};
     end
 
     len_matrix = height(matrix);
-        
+    
+    %Get the number of rows to be split
     lenPercent = ceil(percSplit * len_matrix);
+    %Create empty matrices to be filled with data
     matrixTraining = zeros(lenPercent,width(matrix));              
     matrixTesting = zeros((len_matrix-lenPercent),width(matrix));
     
@@ -24,7 +38,8 @@ function [matrixTraining, matrixTesting] = splitData(varargin)
         disp("Splitting data sequentially");
         indexes = (1:len_matrix-lenPercent);
     end
-
+    
+    %set row counters
     counterTraining = 1;
     counterTesting = 1;
     

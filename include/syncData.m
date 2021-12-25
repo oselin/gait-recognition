@@ -1,4 +1,17 @@
 function [syncr] = syncData(data)
+    %% --------------------------------------------------------------------
+    %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+    %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
+    %
+    %   SYNCHRONIZE DATA FUNCTION
+    % ---------------------------------------------------------------------
+    
+    %%---------------------------------------------------------------------
+    %   NOTE
+    %   data must be in the following form:
+    %   data = {IMU_file, MITCH_FILE, MITCH_FILE};
+    %----------------------------------------------------------------------
+
     %% TO TEST THE FUNCTION ALONE, UNCOMMENT THIS
     %   and comment function and the last end
     %clc;
@@ -8,12 +21,6 @@ function [syncr] = syncData(data)
     %file02 = readtable('data/record_lab_15-12-21_working/mitch.txt', "VariableNamingRule","preserve");
     %data = {file01, file02};
 
-    
-    %----------------------------------------------------------------------
-    %% NOTE
-    %   DATA must be in the following form:
-    %   DATA = {IMU_file{:,6}, MITCH_FILE{:,4}, MITCH_FILE{:,4}};
-    %----------------------------------------------------------------------
     LEN = length(data);
     DATA = cell(1,LEN);
     for i=1:LEN

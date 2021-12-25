@@ -1,7 +1,15 @@
 function [] = plotLabeledData(mydata)
+    %% --------------------------------------------------------------------
+    %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+    %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
+    %
+    %   PLOT LABELED DATA FUNCTION
+    % ---------------------------------------------------------------------
+    
+    %get total number of classes
     n = length(unique(mydata{:,end}));
-    if (n>20)
-        %Can't imagine something with more than 20 classes
+    if (n>30)
+        %Can't imagine something with more than 30 classes
         disp("Data seems unlabeled. Please check your input.");
         return;
     end

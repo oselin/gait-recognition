@@ -1,8 +1,18 @@
-%% GAIT RECOGNITION BY ML ANALYSIS ON IMU DATA
+%% ------------------------------------------------------------------------
+%   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+%   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
+%
+%   Required packages:
+%   Parallel Computing Toolbox
+%   Neural Network Toolbox
+%   Signal Toolbox
+%   Statistics Toolbox
+% -------------------------------------------------------------------------
 clear ;
 close all;
 clc
 addpath("include");
+
 
 %% DATA IMPORTING
 try
@@ -71,13 +81,14 @@ layers = [ ...
 miniBatchSize = 1024;
 maxEpochs = 100;
 
-options = trainingOptions('adam', ...
+options = trainingOptions(...
+    'adam', ...
     'MiniBatchSize',miniBatchSize, ...
     'MaxEpochs',maxEpochs, ...
     'GradientThreshold', 2, ...
     'Verbose', 0, ...
-    'ExecutionEnvironment','gpu',...
-    'Plots','training-progress');
+    'Plots','training-progress', ...
+    'ExecutionEnvironment','gpu');
 
 trainingX = transposition(trainingX);
 trainingY = transposition(trainingY,'categorical');
@@ -99,43 +110,43 @@ for i = 1:length(testX)
     acc = sum(YPred == testY{i})/numel(testY{i});
     disp("Accuracy for phase "+ num2str(i)+": " + num2str(acc));
 end
-
+return
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);
 
-% %% Setting data properly for unsupervised learning
-% if isa(training, 'table')
-%     training = training{:,:};
-% end
-% if isa(test, 'table')
-%     test = test{:,:};
-% end
-% Xtrain = training(:,1:end-1);
-% Ytrain = training(:,end);
-% 
-% Xtest = test(:,1:end-1);
-% Ytest = test(:, end);
-% 
-% %% Unsupervised Learning: k-Means
-% [idx, C] = kmeans(Xtrain, ...
-%                   4, ...
-%                   "Display","final", ...
-%                   "Replicates", 30 ...
-%                   );
-% comp = [idx,Ytrain];
-% 
-% %% Prediction for the unsupervised learning
-% [~,idx_test] = pdist2(C,Xtest,'euclidean','Smallest',1);
-% 
-% acc_kmeans = sum(idx_test==Ytest')./numel(idx_test);
-% disp("Unsupervised [kMeans] accuracy: " + num2str(acc_kmeans));
-% 
-% %% Show the results
-% N = 1:9900;
-% gscatter(Xtrain(N,7),Xtrain(N,8),idx(N)',"rgcb")
-% hold on
-% plot(C(:,1),C(:,2),'kx')
-% gscatter(Xtest(N,7),Xtest(N,8),idx_test(N)', "rgcb" ,'o')
-% legend('Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster Centroid', ...
-%     'Data classified to Cluster 1','Data classified to Cluster 2', ...
-%     'Data classified to Cluster 3','Data classified to Cluster 4')
+%% Setting data properly for unsupervised learning
+if isa(training, 'table')
+    training = training{:,:};
+end
+if isa(test, 'table')
+    test = test{:,:};
+end
+Xtrain = training(:,1:end-1);
+Ytrain = training(:,end);
+
+Xtest = test(:,1:end-1);
+Ytest = test(:, end);
+
+%% Unsupervised Learning: k-Means
+[idx, C] = kmeans(Xtrain, ...
+                  4, ...
+                  "Display","final", ...
+                  "Replicates", 30 ...
+                  );
+comp = [idx,Ytrain];
+
+%% Prediction for the unsupervised learning
+[~,idx_test] = pdist2(C,Xtest,'euclidean','Smallest',1);
+
+acc_kmeans = sum(idx_test==Ytest')./numel(idx_test);
+disp("Unsupervised [kMeans] accuracy: " + num2str(acc_kmeans));
+
+%% Show the results
+N = 1:9900;
+gscatter(Xtrain(N,7),Xtrain(N,8),idx(N)',"rgcb")
+hold on
+plot(C(:,1),C(:,2),'kx')
+gscatter(Xtest(N,7),Xtest(N,8),idx_test(N)', "rgcb" ,'o')
+legend('Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster Centroid', ...
+    'Data classified to Cluster 1','Data classified to Cluster 2', ...
+    'Data classified to Cluster 3','Data classified to Cluster 4')
