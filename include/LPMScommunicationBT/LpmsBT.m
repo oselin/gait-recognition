@@ -26,19 +26,18 @@ classdef LpmsBT < handle
         GET_STATUS            = 5;  %request actual status
         GOTO_COMMAND_MODE     = 6;  %set command mode
         GOTO_STREAM_MODE      = 7;  %set stream mode
-        GET_SENSOR_DATA       = 9;  %data request
-        
+        GET_SENSOR_DATA       = 9;  %data request        
         SET_TRANSMIT_DATA     = 10; %set data to transmit
-        %shift values to build the sent raw data to config transmit data
-        shifts = [9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 21];
-
+        SET_STREAM_FREQ       = 11; %set freq of streaming mode
         GET_SERIAL_NUMBER     = 90; %request serial number
         GET_DEVICE_NAME       = 91; %request sensor name
         GET_FIRMWARE_INFO     = 92; %request firmware info
         
+        %shift values to build the sent raw data to config transmit data
+        SHIFT_SET_TRANSMIT_DATA = [9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 21];
+
         %Configuration register contents
-            %definition of bit vectors to extract properly the info from the
-            %reply to a get config command
+            %definition of bit vectors to extract properly the info from the            %reply to a get config command
         LPMS_GYR_AUTOCAL_ENABLED = bitshift(1, 30);
         LPMS_LPBUS_DATA_MODE_16BIT_ENABLED = bitshift(1, 22);
         LPMS_LINACC_OUTPUT_ENABLED = bitshift(1, 21);
@@ -56,22 +55,35 @@ classdef LpmsBT < handle
         LPMS_MAG_RAW_OUTPUT_ENABLED = bitshift(1, 10);
         LPMS_PRESSURE_OUTPUT_ENABLED = bitshift(1, 9);
 
-        LPMS_STREAM_FREQ_5HZ_ENABLED      = 0;
+        %values red by get_config
+        LPMS_STREAM_FREQ_5HZ_ENABLED      = 0; 
         LPMS_STREAM_FREQ_10HZ_ENABLED     = 1;
-        LPMS_STREAM_FREQ_25HZ_ENABLED     = 2;
+        LPMS_STREAM_FREQ_30HZ_ENABLED     = 2;
         LPMS_STREAM_FREQ_50HZ_ENABLED     = 3;
         LPMS_STREAM_FREQ_100HZ_ENABLED    = 4;
         LPMS_STREAM_FREQ_200HZ_ENABLED    = 5;
-        LPMS_STREAM_FREQ_400HZ_ENABLED    = 6;
-        LPMS_STREAM_FREQ_MASK             = 7;
+        LPMS_STREAM_FREQ_300HZ_ENABLED    = 6;
+        LPMS_STREAM_FREQ_500HZ_ENABLED    = 7;
+
+        LPMS_STREAM_FREQ_MASK             = 7; %to extract stream freq from get_config
         
+        %set values
         LPMS_STREAM_FREQ_5HZ = 5;
         LPMS_STREAM_FREQ_10HZ = 10;
-        LPMS_STREAM_FREQ_25HZ = 25;
+        LPMS_STREAM_FREQ_30HZ = 30;
         LPMS_STREAM_FREQ_50HZ = 50;
         LPMS_STREAM_FREQ_100HZ = 100;
         LPMS_STREAM_FREQ_200HZ = 200;
-        LPMS_STREAM_FREQ_400HZ = 400;
+        LPMS_STREAM_FREQ_300HZ = 300;
+        LPMS_STREAM_FREQ_500HZ = 500;
+        FREQ = [5,...
+                10,...
+                30,...
+                50,...
+                100,...
+                200,...
+                300,...
+                500];
         
         PARAMETER_SET_DELAY = 0.01; %wait step in wait loops
         DATA_QUEUE_SIZE = 64; %max data stored
@@ -83,10 +95,10 @@ classdef LpmsBT < handle
         isSensorConnected = false; %boolean for connection
         
         % define the properties of the class here, (like fields of a struct)
-        rxBuffer = uint8(zeros(1, lpms.MAX_BUFFER)); %buffer for received packets
-        rawTxBuffer = uint8(zeros(1, lpms.MAX_BUFFER)); %buffer for data to send
+        rxBuffer = uint8(zeros(1, LpmsBT.MAX_BUFFER)); %buffer for received packets
+        rawTxBuffer = uint8(zeros(1, LpmsBT.MAX_BUFFER)); %buffer for data to send
         inBytes = uint8(zeros(1, 2)); %buffer to aggregate 2 bytes for conversion
-        rxState = lpms.PACKET_END; %state of reading data process
+        rxState = LpmsBT.PACKET_END; %state of reading data process
         rxIndex = 0; %index in reading data process
 
         % extracted data during reading data process
@@ -95,12 +107,9 @@ classdef LpmsBT < handle
         currentLength = 0;
         lrcCheck = 0;
 
-%         lastTimestamp = 0;
-%         fps = 0; 
-
-        %
         waitForAck = false; %boolean for wait ack state
         waitForData = false; %boolean for wait data state
+        ack = false; %true = ACK, false = NACK
 
         % Settings related
         imuId = 0;
@@ -212,10 +221,10 @@ classdef LpmsBT < handle
                 obj.getConfig(); %get sensor config + parsing
             catch e
                 errordlg(e.message);
+                disp(e);
                 obj.disconnect();
             end
 
-            tic
             ret = obj.isSensorConnected;
 
         end
@@ -237,18 +246,15 @@ classdef LpmsBT < handle
 
         end
 
-        function setCommandMode(obj)
+        function ret = setCommandMode(obj)
+            %ret true if set is successful
+            %false if error occures
+            disp("setting command mode");
             if(~obj.isSensorConnected) %check connection
                 disp("no sensor connected");
+                ret = false;
                 return;
-            end
-            
-            %flush data from streaming mode
-            disp("flush");            
-            while(obj.BTconn.NumBytesAvailable > 0)
-                flush(obj.BTconn);
-                pause(0.1);
-            end
+            end          
             
             obj.configCallback(11); % set interrupt
             obj.waitForAck = true;
@@ -258,14 +264,26 @@ classdef LpmsBT < handle
                 disp('setCommandMode wait for ack timeout');
                 obj.readCallbackFcn(obj.BTconn); %force data read
             end
-            obj.isStreamMode = false; %now in command mode
-            obj.configCallback("off"); %deactivate interrupt function
+
+            if(obj.ack) %received ACK
+                obj.isStreamMode = false; %now in command mode
+                obj.configCallback("off"); %deactivate interrupt function
+                ret = true;
+            else %received NACK
+                disp("setCommandMode failed");
+                ret = false;
+            end
+            obj.ack = false;          
 
         end
 
-        function setStreamingMode(obj)
+        function ret = setStreamingMode(obj)
+            %ret true if set is successful
+            %false if error occures
+            disp("setting streaming mode");
             if(~obj.isSensorConnected) %check connection
                 disp("no sensor connected");
+                ret = false;
                 return;
             end
 
@@ -277,15 +295,22 @@ classdef LpmsBT < handle
                 disp('setStreamingMode wait for ack timeout');
                 obj.readCallbackFcn(obj.BTconn); %force data read
             end
-            obj.configCallback("off"); %deactivate interrupt function
-            disp("entered streaming mode");
-            obj.isStreamMode = true; %now in streaming mode
 
-            obj.configCallback(11+obj.sensorDataLength); % set interrupt
+            if(obj.ack) %received ACK
+                obj.configCallback("off"); %deactivate interrupt function
+                obj.isStreamMode = true; %now in streaming mode
+                obj.configCallback(11+obj.sensorDataLength); % set interrupt
+                ret = true;
+            else %received NACK
+                disp("setStreamingMode failed");
+                ret = false;
+            end
+            obj.ack = false;
 
         end
 
         function ret = getConfig(obj)
+            disp("getting config");
             if(~obj.isSensorConnected) %check connection
                 ret = false;
                 disp("no sensor connected");
@@ -361,6 +386,10 @@ classdef LpmsBT < handle
         end
         
         function ret = setEnabledData(obj,boolVector)
+            %ret true if set is successful
+            %false if error occures
+
+            disp("setting enabled data");
             %ret false if sensor not connected
 
 %             boolVector values order:
@@ -375,35 +404,81 @@ classdef LpmsBT < handle
 
             %build data to send
             %for efficiency and to avoid errors choose the shortest one
-            len = min(length(boolVector),length(obj.shifts)); 
+            len = min(length(boolVector),length(obj.SHIFT_SET_TRANSMIT_DATA)); 
             commandData = uint32(0); %data to sand is a 4 bytes value
             for i=1:len
                 if(boolVector(i)) %add boolean bits to the data packet
                                                %shift a bit=1 in the right position and add it to packet                                               
-                    commandData = commandData + bitshift(1,obj.shifts(i));
+                    commandData = commandData + bitshift(1,obj.SHIFT_SET_TRANSMIT_DATA(i));
                 end
             end
             obj.rawTxBuffer(1:4) = typecast(commandData, 'uint8'); %cast the packet in 4 bytes data vector
-%             disp(string(dec2bin(obj.rawTxBuffer(1:4))));
             
             obj.configCallback(11);  % set interrupt
-
             obj.waitForAck = true;
             obj.sendData(obj.SET_TRANSMIT_DATA, 4); %send command
             if ~obj.waitForAckLoop() % wait loop
                 % timeout, manual read bytes avaiable
-                disp('setTransmitData wait for ack timeout');
+                disp('setEnabledData wait for ack timeout');
                 obj.readCallbackFcn(obj.BTconn); %force data read
             end
-
-            disp("new config:"); %to check successful set
-            obj.getConfig();
             
-            if(~obj.isStreamMode) %if not in stream mode
-                obj.configCallback("off"); %deactivate interrupt
-            else    
-                obj.configCallback(11+obj.sensorDataLength); % set interrupt
+            if(obj.ack) %received ACK
+                if(~obj.isStreamMode) %if not in stream mode
+                    obj.configCallback("off"); %deactivate interrupt
+                else    
+                    obj.configCallback(11+obj.sensorDataLength); % set interrupt
+                end
+                ret = true;
+            else %received NACK
+                disp("setEnabledData failed");
+                ret = false;
             end
+            obj.ack = false;
+
+        end
+
+        function ret = setStreamFreq(obj,freq)
+            %ret true if set is successful
+            %false if error occures
+
+            disp("setting streaming freq");
+
+            if(~obj.isSensorConnected) %check connection
+                ret = false;
+                disp("no sensor connected");
+                return;
+            end
+
+            if(isempty(find(obj.FREQ==freq))) %#ok<EFIND> %check input param
+                disp("given freq not valid: "+string(freq));
+                ret = false;
+                return;
+            end
+
+            commandData = uint32(freq);
+            obj.rawTxBuffer(1:4) = typecast(commandData, 'uint8'); %cast the packet in 4 bytes data vector
+            obj.configCallback(11);  % set interrupt
+            obj.waitForAck = true;
+            obj.sendData(obj.SET_STREAM_FREQ, 4); %send command
+            if ~obj.waitForAckLoop() % wait loop
+                % timeout, manual read bytes avaiable
+                disp('setStreamFreq wait for ack timeout');
+                obj.readCallbackFcn(obj.BTconn); %force data read
+            end
+            
+            if(obj.ack) %received ACK
+                if(~obj.isStreamMode) %if not in stream mode
+                    obj.configCallback("off"); %deactivate interrupt
+                else 
+                    obj.configCallback(11+obj.sensorDataLength); % set interrupt
+                end
+                ret = true;
+            else %received NACK
+                disp("setStreamFreq failed");
+                ret = false;
+            end
+            obj.ack = false;
 
         end
 
@@ -476,7 +551,7 @@ classdef LpmsBT < handle
             timeout = 0;
             while (obj.waitForAck && timeout < 100) %until timout or ack
                 pause(obj.PARAMETER_SET_DELAY); %wait
-                timeout = timeout + 1; C
+                timeout = timeout + 1;
             end
             if timeout >= 100 %if timeout reached
                 ret = false;
@@ -485,13 +560,13 @@ classdef LpmsBT < handle
             end
         end
         
-        function ret = waitForDataLoop(This)
+        function ret = waitForDataLoop(obj)
             %ret true if successfully received data
             %false if fail
 
             timeout = 0;
-            while (This.waitForData && timeout < 100) %until timout or data read
-                pause(This.PARAMETER_SET_DELAY); %wait
+            while (obj.waitForData && timeout < 100) %until timout or data read
+                pause(obj.PARAMETER_SET_DELAY); %wait
                 timeout = timeout + 1; %until timout ot ack
             end
             if timeout >= 100 %if timeout reached
@@ -501,7 +576,7 @@ classdef LpmsBT < handle
             end
         end
 
-        function sendData(obj, command, length) %lenght as number of bytes
+        function ret = sendData(obj, command, length) %lenght as number of bytes
             %ret true if successfully sends data
             %    false + close connection if fail
 
@@ -572,7 +647,6 @@ classdef LpmsBT < handle
                         obj.rxState = obj.PACKET_RAW_DATA; %switch to read data
                         obj.lrcCheck = obj.currentAddress + obj.currentFunction + obj.currentLength; %update LRC
                       
-
                     case obj.PACKET_RAW_DATA %data read
                         if obj.rxIndex == obj.currentLength %finish read
                             obj.inBytes(1) = d; %saves LRC first byte in buffer
@@ -606,35 +680,36 @@ classdef LpmsBT < handle
         function parseFunction(obj)
             switch (obj.currentFunction) %depending on the command ID red:
                 case obj.REPLY_ACK 
-%                     disp('REPLY_ACK') 
+                    disp('REPLY_ACK') 
                     obj.waitForAck = false; 
+                    obj.ack = true;
                     return;
                     
                 case obj.REPLY_NACK
-%                     disp('REPLY_NACK') 
+                    disp('REPLY_NACK') 
                     obj.waitForAck = false;
+                    obj.ack = false;
                     return;
             
                 case obj.GET_CONFIG
-%                     disp('GET_CONFIG') 
+                    disp('GET_CONFIG') 
                     obj.configurationRegister = obj.convertRxbytesToInt(0, obj.rxBuffer); %cast to int
                     obj.parseConfig(obj.configurationRegister); %parse config data
                     obj.waitForData = false;
+                    return;
                     
                 case obj.GET_SENSOR_DATA
-%                     disp('GET_SENSOR_DATA')
-                    t = toc;
-                    obj.fps = 1/t;
-                    obj.fps;
-                    tic
+                    disp('GET_SENSOR_DATA')
                     obj.parseSensorData(); %parse sensor data
                     obj.waitForData = false;
+                    return;
                     
                 case obj.GET_DEVICE_NAME
 %                     disp('GET_DEVICE_NAME')
                     obj.deviceName = obj.convertRxbytesToString(16, obj.rxBuffer); %cast to string
                     obj.deviceNameReady = true;
                     obj.waitForData = false;
+                    return;
             end
         end
 
@@ -660,16 +735,18 @@ classdef LpmsBT < handle
                     obj.streamingFrequency = obj.LPMS_STREAM_FREQ_5HZ;
                 case obj.LPMS_STREAM_FREQ_10HZ_ENABLED
                     obj.streamingFrequency = obj.LPMS_STREAM_FREQ_10HZ;
-                case obj.LPMS_STREAM_FREQ_25HZ_ENABLED
-                    obj.streamingFrequency = obj.LPMS_STREAM_FREQ_25HZ;
+                case obj.LPMS_STREAM_FREQ_30HZ_ENABLED
+                    obj.streamingFrequency = obj.LPMS_STREAM_FREQ_30HZ;
                 case obj.LPMS_STREAM_FREQ_50HZ_ENABLED
                     obj.streamingFrequency = obj.LPMS_STREAM_FREQ_50HZ;
                 case obj.LPMS_STREAM_FREQ_100HZ_ENABLED
                     obj.streamingFrequency = obj.LPMS_STREAM_FREQ_100HZ;
                 case obj.LPMS_STREAM_FREQ_200HZ_ENABLED
                     obj.streamingFrequency = obj.LPMS_STREAM_FREQ_200HZ;
-                case obj.LPMS_STREAM_FREQ_400HZ_ENABLED
-                    obj.streamingFrequency = obj.LPMS_STREAM_FREQ_400HZ;
+                case obj.LPMS_STREAM_FREQ_300HZ_ENABLED
+                    obj.streamingFrequency = obj.LPMS_STREAM_FREQ_300HZ;
+                case obj.LPMS_STREAM_FREQ_500HZ_ENABLED
+                    obj.streamingFrequency = obj.LPMS_STREAM_FREQ_500HZ;
                 otherwise
                     disp("Error during readign stream freq");
                     ret = false;
@@ -924,18 +1001,18 @@ classdef LpmsBT < handle
     
         function configCallback(obj, n) %config interrupt
             if(strcmp(string(n),"off")) %deactivate
-                disp("trigger off");
+%                 disp("trigger off");
                 configureCallback(  obj.BTconn, ...
                                     "off"...
                                  );
             elseif(strcmp(string(n),"terminator")) %use terminator
-                disp("set terminator trigger");
+%                 disp("set terminator trigger");
                 configureCallback(  obj.BTconn, ...
                                     "terminator", ...
                                     @obj.readCallbackFcn ...
                                  );
             elseif(n>0)
-                disp("set n bytes trigger: "+string(n)); %use lenght
+%                 disp("set n bytes trigger: "+string(n)); %use lenght
                 configureCallback(  obj.BTconn, ...
                                     "byte", ...
                                     n, ...
