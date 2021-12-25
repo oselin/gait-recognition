@@ -1,6 +1,10 @@
-
-
 function []= dataVisualization(videoName, startingPoint, labeledData)
+    %% --------------------------------------------------------------------
+    %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+    %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
+    %
+    %   DATA VISUALIZATION FUNCTION
+    % ---------------------------------------------------------------------
     
     %% Import the video
     myvideo = VideoReader(videoName,"CurrentTime",startingPoint);
@@ -8,7 +12,7 @@ function []= dataVisualization(videoName, startingPoint, labeledData)
     %% Get frame dimensions
     [height, width] = size(read(myvideo, 1),1,2);
     
-    %% Set colored filters
+    %% Set colored filters (one for each phase/class)
     temp = ones(height, width);
     mylayers = {
                 cat(3, 1.00*temp, 1.00*temp, 000*temp), ... %PHASE 1
