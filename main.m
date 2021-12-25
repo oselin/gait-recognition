@@ -26,9 +26,12 @@ try
     file08 = readtable('data/record_walk_7-12-21_caviglia/personaC5_8kmh.csv', "VariableNamingRule","preserve");
     file09 = readtable('data/record_walk_7-12-21_caviglia/personaD6kmh.csv', "VariableNamingRule","preserve");
     file10 = readtable('data/record_walk_7-12-21_caviglia/personaE6kmh.csv', "VariableNamingRule","preserve");
-%     file06 = readtable('data/record_lab_15-12-21/IMU_1.csv', "VariableNamingRule","preserve");
-%     file07 = readtable('data/record_lab_15-12-21/IMU_2.csv', "VariableNamingRule","preserve");
-%     file08 = readtable('data/record_lab_15-12-21/IMU_3.csv', "VariableNamingRule","preserve");
+    %adding cutted lab data 
+    file11 = readtable('data/record_lab_15-12-21/IMU1_1.csv', "VariableNamingRule","preserve");
+    file12 = readtable('data/record_lab_15-12-21/IMU1_2.csv', "VariableNamingRule","preserve");
+    file13 = readtable('data/record_lab_15-12-21/IMU2_1.csv', "VariableNamingRule","preserve");
+    file14 = readtable('data/record_lab_15-12-21/IMU3_1.csv', "VariableNamingRule","preserve");
+
     disp("Data successfully imported");
 catch ME
     if strcmp(ME.identifier, 'MATLAB:textio:textio:FileNotFound')
@@ -36,7 +39,7 @@ catch ME
         return;
     end
 end
-file_train = {file01, file02, file03, file04, file06, file07, file08, file09};
+file_train = {file01, file02, file03, file04, file06, file07, file08, file09, file11, file12, file13, file14};
 file_test = {file05, file10};
 
 %% Adding LABELS by threshold method
@@ -67,7 +70,7 @@ test = file_test;
 %% Setting up the RNN network
 %% -General settings
 numFeatures = width(training) - 1;
-numHiddenUnits = 200;
+numHiddenUnits = 50;
 numClasses = 4;
 
 layers = [ ...
