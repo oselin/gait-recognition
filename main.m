@@ -59,15 +59,12 @@ end
 %% Plot labeled data
 % plotLabeledData(file_train, time_train);
 
+
 %% Creating the TEST SET and the TRANING SET
 %[training, test] = splitData(file,0.8);
 %deleting unneccessary columns
-file_train(:,'QuatW') = [];
-file_train(:,'gyro_z_filt') = [];
-file_train(:,'gyro_z_heavy_filt') = [];
-file_test(:,'QuatW') = [];
-file_test(:,'gyro_z_filt') = [];
-file_test(:,'gyro_z_heavy_filt') = [];
+% file_train(:,'QuatW') = [];
+% file_test(:,'QuatW') = [];
 
 training = file_train;
 test = file_test;
@@ -106,7 +103,8 @@ trainingY = transposition(trainingY,'categorical');
 testX = transposition(testX);
 testY = transposition(testY,'categorical');
 
-net = trainNetwork(trainingX,trainingY,layers,options);
+%net = trainNetwork(trainingX,trainingY,layers,options);
+net = load("output/trainedNetwork2712").net;    
 
 %% Plot of the testing data
 % figure
@@ -121,6 +119,9 @@ for i = 1:length(testX)
     acc = sum(YPred == testY{i})/numel(testY{i});
     disp("Accuracy for phase "+ num2str(i)+": " + num2str(acc));
 end
+
+%% SIMULATE THE DATASTREAM
+simulateStream(net, file10);
 return
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);
