@@ -33,6 +33,7 @@ function [] = simulateStream(network ,testData, reset_label)
 
         plotLabeledData([to_plot' y_to_plot'], time);
         xlim([i i+TIMEFRAME-1])
+        y_to_plot(1:10)
         pause(0.01);
     end
 end
