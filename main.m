@@ -31,6 +31,7 @@ try
     file12 = readtable('data/record_lab_15-12-21/IMU1_2.csv', "VariableNamingRule","preserve");
     file13 = readtable('data/record_lab_15-12-21/IMU2_1.csv', "VariableNamingRule","preserve");
     file14 = readtable('data/record_lab_15-12-21/IMU3_1.csv', "VariableNamingRule","preserve");
+    file15 = readtable('data/record_lab_15-12-21_afternoon/IMU4_1.csv', "VariableNamingRule","preserve");
 
     disp("Data successfully imported");
 catch ME
@@ -39,7 +40,7 @@ catch ME
         return;
     end
 end
-file_train = {file01, file02, file03, file04, file06, file07, file08, file09, file11, file12, file13, file14};
+file_train = {file01, file02, file03, file04, file06, file07, file08, file09, file11, file12, file13, file14, file15};
 file_test = {file05, file10};
 
 %% Adding LABELS by threshold method
@@ -56,10 +57,14 @@ end
 [time_test, file_test] = mergeData(file_test, 'remove');
 
 %% Plot labeled data
-%plotLabeledData(file_train, time_train);
+% plotLabeledData(file_train, time_train);
+
 
 %% Creating the TEST SET and the TRANING SET
 %[training, test] = splitData(file,0.8);
+%deleting unneccessary columns
+% file_train(:,'QuatW') = [];
+% file_test(:,'QuatW') = [];
 
 training = file_train;
 test = file_test;
