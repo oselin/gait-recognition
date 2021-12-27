@@ -15,6 +15,8 @@ function [timestamp,mydata] = mergeData(varargin)
     
     timestamp = mydata{:,2};
 
+    %FOR THIS KIND OF SENSORS, COLUMN 1,2,3 ARE USELESS
+    mydata = mydata(:,4:end);
     %% If removing empty columns is requested
     if (nargin > 1 && strcmp(varargin{2},'remove'))
         % find the non zero columns in the matrix

@@ -1,4 +1,4 @@
-function [] = plotLabeledData(mydata)
+function [] = plotLabeledData(mydata, time)
     %% --------------------------------------------------------------------
     %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
     %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
@@ -16,9 +16,9 @@ function [] = plotLabeledData(mydata)
 
     colors = ['b', 'r', 'm', 'y', 'g'];
 
-    for i = 4:width(mydata)-1 %SENSORID|TIMESTAMP|FRAMENUM|ID are not useful data to display
+    for i = 1:width(mydata)-1 %ID is not useful data to display
         figure(i)
-        time = mydata{:,2};
+        
         for j = 1:n
             temp = mydata{:,i};
             %set all the rows different from the i-class to null

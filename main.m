@@ -52,11 +52,11 @@ for i = 1:length(file_test)
 end
 
 %% Merging all the acquired data
-[~, file_test] = mergeData(file_test, 'remove');
-[~, file_train]= mergeData(file_train, 'remove');
+[time_train, file_train]= mergeData(file_train, 'remove');
+[time_test, file_test] = mergeData(file_test, 'remove');
 
 %% Plot labeled data
-% plotLabeledData(file(1:8965,:));
+plotLabeledData(file_train, time_train);
 
 %% Creating the TEST SET and the TRANING SET
 %[training, test] = splitData(file,0.8);
@@ -90,8 +90,8 @@ options = trainingOptions(...
     'MaxEpochs',maxEpochs, ...
     'GradientThreshold', 2, ...
     'Verbose', 0, ...
-    'Plots','training-progress', ...
-    'ExecutionEnvironment','gpu');
+    'Plots','training-progress');%, ...
+    %'ExecutionEnvironment','gpu');
 
 trainingX = transposition(trainingX);
 trainingY = transposition(trainingY,'categorical');
