@@ -13,8 +13,6 @@ function [] = ThMethod_Validation(data)
 
     %% LOAD 
     
-    % load synckedData_IMU_mitch.mat
-
     dataIMU = load(data);
 
     sig = dataIMU.GyroZ_deg_s_;
