@@ -233,7 +233,7 @@ function [data] = detectPhases_new_2(data_in)
     %}
     
     
-    data = [data_in, array2table(sig_new, 'VariableNames',{'gyro_z_filt','gyro_z_heavy_filt', 'ID'})];
+    data = [data_in, array2table(sig_new(:,end), 'VariableNames',{'ID'})];
     
 end
 
