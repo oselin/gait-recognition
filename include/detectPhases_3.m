@@ -1,12 +1,13 @@
-%% ------------------------------------------------------------------------
-%
-%%   GAIT PHASE RECOGNITION: OFFLINE AUTOMATIC THREASHOLD METHOD
-%
-%% ------------------------------------------------------------------------
-
-
 function [data] = detectPhases_new_2(data_in)
-    %% LOAD 
+    
+    %% --------------------------------------------------------------------
+    %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+    %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
+    %
+    %   GAIT PHASE RECOGNITION: OFFLINE AUTOMATIC THREASHOLD METHOD
+    % ---------------------------------------------------------------------
+   
+   %% LOAD 
 
     %data = readtable(data_in);
 
