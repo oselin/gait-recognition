@@ -45,11 +45,11 @@ file_test = {file05, file10};
 
 %% Adding LABELS by threshold method
 for i = 1:length(file_train)
-    file_train{i} = detectPhases_new_2(file_train{i});
+    file_train{i} = detectPhases_3(file_train{i});
 end
 
 for i = 1:length(file_test)
-    file_test{i} = detectPhases_new_2(file_test{i});
+    file_test{i} = detectPhases_3(file_test{i});
 end
 
 %% Merging all the acquired data
@@ -59,12 +59,15 @@ end
 %% Plot labeled data
 % plotLabeledData(file_train, time_train);
 
-
 %% Creating the TEST SET and the TRANING SET
 %[training, test] = splitData(file,0.8);
 %deleting unneccessary columns
 file_train(:,'QuatW') = [];
 file_test(:,'QuatW') = [];
+file_train(:,'gyro_z_filt') = [];
+file_test(:,'gyro_z_filt') = [];
+file_train(:,'gyro_z_heavy_filt') = [];
+file_test(:,'gyro_z_heavy_filt') = [];
 
 training = file_train;
 test = file_test;
@@ -86,7 +89,7 @@ layers = [ ...
     classificationLayer];
 
 %% -Setting the options for the LSTM
-miniBatchSize = 1024;
+miniBatchSize = 1000;
 maxEpochs = 100;
 
 options = trainingOptions(...
@@ -121,7 +124,7 @@ for i = 1:length(testX)
 end
 
 %% SIMULATE THE DATASTREAM
-simulateStream(net, file10, 0);
+% simulateStream(net, file10, 0);
 return
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);

@@ -26,8 +26,7 @@ function [] = simulateStream(network ,testData, reset_label)
         y = classify(network, DATASTREAM);
           
 
-        to_plot = DATASTREAM(3,:);
-        time = i:i+TIMEFRAME-1;
+        
         if reset_label
             y_to_plot = grp2idx(y)';
         else
@@ -35,12 +34,13 @@ function [] = simulateStream(network ,testData, reset_label)
             results(i) = grp2idx(y(end));
         end
 
+%         to_plot = DATASTREAM(3,:);
+%         time = i:i+TIMEFRAME-1;
 %         plotLabeledData([to_plot' y_to_plot'], time);
 %         xlim([i i+TIMEFRAME-1]);
 %         pause(0.01);
+
     end
     acc = sum(results == table2array(testData(:,end)))/height(testData);
-    disp(size(table2array(testData(:,end))));
-    disp(size(results));
-    disp(acc);
+    disp("accuracy in stream simulation: " + num2str(acc));
 end
