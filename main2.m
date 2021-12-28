@@ -50,7 +50,7 @@ test = {file05, file10};
 %% Setting up the RNN network
 %% -General settings
 numFeatures = height(XTrain{1});
-numHiddenUnits = 100;
+numHiddenUnits = 50;
 numClasses = 4;
 
 layers = [ ...
@@ -62,8 +62,8 @@ layers = [ ...
 
 %% -Setting the options for the LSTM
 miniBatchSize = 10000;
-maxEpochs = 100;
-gradientThreshold = 1.5;
+maxEpochs = 180;
+gradientThreshold = 2;
 executionEnvironment = 'gpu';
 
 options = trainingOptions(...
@@ -75,8 +75,8 @@ options = trainingOptions(...
     'Plots','training-progress', ...
     'ExecutionEnvironment', executionEnvironment);
 
-% net = trainNetwork(XTrain,YTrain,layers,options);
-net = load("output/trainedNetwork2812_main2.mat").net;    
+net = trainNetwork(XTrain,YTrain,layers,options);
+% net = load("output/trainedNetwork2812_main2_100L_180E_best.mat").net;    
 
 %% Plot of the testing data
 % figure
@@ -86,8 +86,9 @@ net = load("output/trainedNetwork2812_main2.mat").net;
 % title("Test Data")
 
 %% Prediction of the classes (GAIT PHASES) and ACCURACY
-correct = zeros(4,1);
-totPhases = zeros(4,1);
+disp("Accuracy per phase:")
+correct = zeros(1,4);
+totPhases = zeros(1,4);
 for i = 1:length(XTest)
     YPred = classify(net,XTest{i});
     for j = 1:4
@@ -97,6 +98,14 @@ for i = 1:length(XTest)
     end
 end 
 disp(correct./totPhases);
+
+disp("Accuracy per test set")
+acc = zeros(1,length(XTest));
+for i = 1:length(XTest)
+    YPred = classify(net,XTest{i});
+    acc(i) = sum(YPred == YTest{i})/numel(YTest{i});
+end 
+disp(acc);
 
 %% SIMULATE THE DATASTREAM
 % simulateStream(net, file10, 0);
