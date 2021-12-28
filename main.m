@@ -63,8 +63,8 @@ end
 %% Creating the TEST SET and the TRANING SET
 %[training, test] = splitData(file,0.8);
 %deleting unneccessary columns
-% file_train(:,'QuatW') = [];
-% file_test(:,'QuatW') = [];
+file_train(:,'QuatW') = [];
+file_test(:,'QuatW') = [];
 
 training = file_train;
 test = file_test;
@@ -103,8 +103,8 @@ trainingY = transposition(trainingY,'categorical');
 testX = transposition(testX);
 testY = transposition(testY,'categorical');
 
-%net = trainNetwork(trainingX,trainingY,layers,options);
-net = load("output/trainedNetwork2712").net;    
+% net = trainNetwork(trainingX,trainingY,layers,options);
+net = load("output/trainedNetwork2712_noQuaternions").net;    
 
 %% Plot of the testing data
 % figure

@@ -35,15 +35,15 @@ classdef LpmsBT < handle
         
         %shift values to build the sent raw data to config transmit data
         SHIFT_SET_TRANSMIT_DATA = [9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 21];
+        DEFAULT_TRANSMIT_DATA =   [0,  0,  1,  1,  0,  0,  0,  1,  0,  0,  1];
 
         %Configuration register contents
-            %definition of bit vectors to extract properly the info from the            %reply to a get config command
+        %definition of bit vectors to extract properly the info from the
         LPMS_GYR_AUTOCAL_ENABLED = bitshift(1, 30);
         LPMS_LPBUS_DATA_MODE_16BIT_ENABLED = bitshift(1, 22);
         LPMS_LINACC_OUTPUT_ENABLED = bitshift(1, 21);
         LPMS_DYNAMIC_COVAR_ENABLED = bitshift(1, 20);
         LPMS_GYR_CALIBRA_ENABLED = bitshift(1, 15);
-
         LPMS_ALTITUDE_OUTPUT_ENABLED = bitshift(1, 19);
         LPMS_QUAT_OUTPUT_ENABLED = bitshift(1, 18);
         LPMS_EULER_OUTPUT_ENABLED = bitshift(1, 17);
@@ -385,27 +385,30 @@ classdef LpmsBT < handle
             
         end
         
-        function ret = setEnabledData(obj,boolVector)
+        function ret = setTransmitData(obj,boolVector)
             %ret true if set is successful
             %false if error occures
 
-            disp("setting enabled data");
+            disp("setting transmit data");
             %ret false if sensor not connected
 
 %             boolVector values order:
 %             [ press, mag, acc, gyro, temp, heave, angVel, euler, quat,
 %             alti, linAcc]
-
+            
             if(~obj.isSensorConnected) %check connection
                 ret = false;
                 disp("no sensor connected");
                 return;
             end
-
+                            
             %build data to send
+            if(isempty(boolVector)) %if no param is passed
+                boolVector = obj.DEFAULT_TRANSMIT_DATA; %use default
+            end
             %for efficiency and to avoid errors choose the shortest one
             len = min(length(boolVector),length(obj.SHIFT_SET_TRANSMIT_DATA)); 
-            commandData = uint32(0); %data to sand is a 4 bytes value
+            commandData = uint32(0); %data to send is a 4 bytes value
             for i=1:len
                 if(boolVector(i)) %add boolean bits to the data packet
                                                %shift a bit=1 in the right position and add it to packet                                               
