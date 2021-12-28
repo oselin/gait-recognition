@@ -23,7 +23,7 @@ function [] = simulateStream(network ,testData, reset_label)
         %Predict the label
         y = classify(network, DATASTREAM);
 
-        to_plot = DATASTREAM(3,:);
+        to_plot = DATASTREAM(4,:);
         time = i:i+TIMEFRAME-1;
         if reset_label
             y_to_plot = grp2idx(y)';
