@@ -1,4 +1,4 @@
-function [] = simulateStream(network ,testData, reset_label, graphicsEnabled)
+function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
     %% --------------------------------------------------------------------
     %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
     %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
@@ -43,5 +43,5 @@ function [] = simulateStream(network ,testData, reset_label, graphicsEnabled)
 
     end
     acc = sum(results == table2array(testData(:,end)))/height(testData);
-    disp("accuracy in stream simulation: " + num2str(acc));
+%     disp("accuracy in stream simulation: " + num2str(acc));
 end
