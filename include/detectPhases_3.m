@@ -1,4 +1,4 @@
-function [data] = detectPhases_new_2(data_in)
+function [data] = detectPhases_3(data_in)
     
     %% --------------------------------------------------------------------
     %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
@@ -11,7 +11,7 @@ function [data] = detectPhases_new_2(data_in)
 
     %data = readtable(data_in);
 
-    sig = data_in.GyroZ_deg_s_;
+    sig = data_in.("GyroZ (deg/s)");
 
     t = 1:numel(sig);
 
