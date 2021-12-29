@@ -51,8 +51,8 @@ test = {file05, file10};
 % Constant parameters
 NumFeatures = height(XTrain{1});
 NumClasses = 4;
-ExecutionEnvironment = 'gpu';
-MiniBatchSize = 10000;
+ExecutionEnvironment = 'cpu';
+MiniBatchSize = 1000;
 
 % Variable parameters
 NetType = { 'gru', 'lstm'};
