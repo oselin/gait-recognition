@@ -41,7 +41,7 @@ catch ME
     end
 end
 file_train = {file01, file02, file03, file04, file06, file07, file08, file09, file11, file12, file13, file14, file15};
-file_test = {file05, file10};
+file_test  = {file05, file10};
 
 %% Adding LABELS by threshold method
 for i = 1:length(file_train)
@@ -54,7 +54,7 @@ end
 
 %% Merging all the acquired data
 [time_train, file_train]= mergeData(file_train, 'remove');
-[time_test, file_test] = mergeData(file_test, 'remove');
+[time_test, file_test]  = mergeData(file_test, 'remove');
 
 %% Plot labeled data
 % plotLabeledData(file_train, time_train);
@@ -124,7 +124,7 @@ for i = 1:length(testX)
 end
 
 %% SIMULATE THE DATASTREAM
-% simulateStream(net, file10, 0);
+simulateStream(net, file10, 0, 0);
 return
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);

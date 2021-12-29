@@ -41,11 +41,11 @@ catch ME
     end
 end
 train = {file01, file02, file03, file04, file06, file07, file08, file09, file11, file12, file13, file14, file15};
-test = {file05, file10};
+test  = {file05, file10};
 
 %% Labeling and preparing data to train and test the network
 [XTrain,YTrain] = dataPreprocessing(train);
-[XTest,YTest] = dataPreprocessing(test);
+[XTest,YTest]   = dataPreprocessing(test);
 
 %% Setting up the RNN network
 %% -General settings
@@ -108,7 +108,7 @@ end
 disp(acc);
 
 %% SIMULATE THE DATASTREAM
-% simulateStream(net, file10, 0);
+% simulateStream(net, file10, 0, 0);
 
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);
