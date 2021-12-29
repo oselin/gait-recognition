@@ -12,6 +12,9 @@ clear ;
 close all;
 clc
 addpath("include");
+addpath("output");
+
+load("results.mat");
 
 
 %% DATA IMPORTING
@@ -61,10 +64,10 @@ layers = [ ...
     classificationLayer];
 
 %% -Setting the options for the LSTM
-miniBatchSize = 10000;
-maxEpochs = 180;
+miniBatchSize = 1000;
+maxEpochs = 100;
 gradientThreshold = 2;
-executionEnvironment = 'gpu';
+executionEnvironment = 'cpu';
 
 options = trainingOptions(...
     'adam', ...
@@ -75,8 +78,8 @@ options = trainingOptions(...
     'Plots','training-progress', ...
     'ExecutionEnvironment', executionEnvironment);
 
-net = trainNetwork(XTrain,YTrain,layers,options);
-% net = load("output/trainedNetwork2812_main2_100L_180E_best.mat").net;    
+% net = trainNetwork(XTrain,YTrain,layers,options);
+net = results{1,1,1,1}.net;    
 
 %% Plot of the testing data
 % figure
@@ -90,7 +93,9 @@ disp("Accuracy per phase:")
 correct = zeros(1,4);
 totPhases = zeros(1,4);
 for i = 1:length(XTest)
+    tic
     YPred = classify(net,XTest{i});
+    disp("Classify time: "+num2str(toc));
     for j = 1:4
         totPhases(j) = totPhases(j) + sum(YTest{i} == categorical(j));
         correct(j) = correct(j) + sum(YPred(YTest{i} == categorical(j)) == categorical(j));
@@ -108,7 +113,8 @@ end
 disp(acc);
 
 %% SIMULATE THE DATASTREAM
-% simulateStream(net, file10, 0, 0);
-
+% tic;
+% disp(simulateStream(net, file10, 0, 0));
+% disp(toc);
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);

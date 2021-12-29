@@ -72,8 +72,11 @@ netData = struct(...
             'streamAcc',  0.0 ...
         );
 
-results = cell(length(NetType), length(NHiddenLayers), length(MaxEpochs), length(GradientThreshold));
-
+I = length(NetType);
+J = length(NHiddenLayers);
+K = length(MaxEpochs);
+L = length(GradientThreshold);
+results = cell(I, J, K, L);
 
 %% Training
 
@@ -83,11 +86,6 @@ layers = [];
 correct = zeros(1,4);
 totPhases = zeros(1,4);
 acc = zeros(1,length(XTest));
-
-I = length(NetType);
-J = length(NHiddenLayers);
-K = length(MaxEpochs);
-L = length(GradientThreshold);
 
 %define net's layers
 for i = 1:I
