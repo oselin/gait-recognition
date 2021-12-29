@@ -142,7 +142,7 @@ for i = 1:I
                 netData.phaseAcc = correct./totPhases;
                 netData.testAcc = acc;
 
-                netData.streamAcc = simulateStream(netData.net, file10, 0);
+                netData.streamAcc = simulateStream(netData.net, file10, 0, 0);
                     
                 results{i,j,k,l} = netData;
             end
