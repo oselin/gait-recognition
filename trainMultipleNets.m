@@ -74,15 +74,25 @@ netData = struct(...
 
 results = cell(length(NetType), length(NHiddenLayers), length(MaxEpochs), length(GradientThreshold));
 
+
+%% Training
+
+disp("Start training");
+
 layers = [];
 correct = zeros(1,4);
 totPhases = zeros(1,4);
 acc = zeros(1,length(XTest));
 
+I = length(NetType);
+J = length(NHiddenLayers);
+K = length(MaxEpochs);
+L = length(GradientThreshold);
+
 %define net's layers
-for i = 1:length(NetType)
+for i = 1:I
     netData.netType = NetType{i};
-    for j = 1:length(NHiddenLayers)
+    for j = 1:J
         netData.nHiddenLayers = NHiddenLayers(j);
         if(strcmp(netData.netType,'gru')) 
             layers = [sequenceInputLayer(NumFeatures)
@@ -102,9 +112,9 @@ for i = 1:length(NetType)
         end
         
         %define training options
-        for k = 1:length(MaxEpochs)
+        for k = 1:K
             netData.maxEpochs = MaxEpochs(k);
-            for l = 1:length(GradientThreshold)
+            for l = 1:L
                 netData.gradientThreshold = GradientThreshold(l);
                 options = trainingOptions(...
                     'adam', ...
@@ -114,6 +124,9 @@ for i = 1:length(NetType)
                     'Verbose', false, ...
                     'Plots','none', ...
                     'ExecutionEnvironment', ExecutionEnvironment);
+                
+                netNumber = (i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l;
+                disp("Training net number: "+num2str(netNumber));
 
                 netData.net = trainNetwork(XTrain,YTrain,layers,options);
                 
@@ -129,7 +142,7 @@ for i = 1:length(NetType)
                 netData.phaseAcc = correct./totPhases;
                 netData.testAcc = acc;
 
-                netData.streamAcc = simulateStream(netDatanet, file10, 0);
+                netData.streamAcc = simulateStream(netData.net, file10, 0);
                     
                 results{i,j,k,l} = netData;
             end
