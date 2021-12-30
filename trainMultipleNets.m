@@ -60,7 +60,7 @@ NHiddenLayers = [50 100 150];
 MaxEpochs = [150 175 200];
 GradientThreshold = [1 1.5 2];
 
-
+% struct were save net, params and accuracies
 netData = struct(...
             'netType', '', ...
             'nHiddenLayers',  0.0, ...
@@ -82,16 +82,23 @@ results = cell(I, J, K, L);
 
 disp("Start training");
 
-layers = [];
-correct = zeros(1,4);
-totPhases = zeros(1,4);
+layers = []; %net structure
+
+% to compute phase accuracy
+correct = zeros(1,4); %result from classification
+totPhases = zeros(1,4); %correct label
+
+% to compute test accuracy
 acc = zeros(1,length(XTest));
 
 %define net's layers
 for i = 1:I
+    %net type
     netData.netType = NetType{i};
     for j = 1:J
+        % n of hidden layers
         netData.nHiddenLayers = NHiddenLayers(j);
+        % build net
         if(strcmp(netData.netType,'gru')) 
             layers = [sequenceInputLayer(NumFeatures)
                 gruLayer(netData.nHiddenLayers,'OutputMode','sequence')
@@ -111,9 +118,12 @@ for i = 1:I
         
         %define training options
         for k = 1:K
+            % n of epochs
             netData.maxEpochs = MaxEpochs(k);
             for l = 1:L
+                % gradient threshold
                 netData.gradientThreshold = GradientThreshold(l);
+                % build option struct
                 options = trainingOptions(...
                     'adam', ...
                     'MiniBatchSize',MiniBatchSize, ...
@@ -123,26 +133,32 @@ for i = 1:I
                     'Plots','none', ...
                     'ExecutionEnvironment', ExecutionEnvironment);
                 
+                %index of trained net
                 netNumber = (i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l;
                 disp("Training net number: "+num2str(netNumber));
-
+                
+                %training
                 netData.net = trainNetwork(XTrain,YTrain,layers,options);
                 
                 %compute accuracy
                 for m = 1:length(XTest)
-                    YPred = classify(netData.net,XTest{m});
-                    acc(m) = sum(YPred == YTest{m})/numel(YTest{m});
-                    for n = 1:4
-                        totPhases(n) = totPhases(n) + sum(YTest{m} == categorical(n));
-                        correct(n) = correct(n) + sum(YPred(YTest{m} == categorical(n)) == categorical(n));
+                    %prediction
+                    YPred = classify(netData.net,XTest{m}); 
+                    %test accuracy
+                    acc(m) = sum(YPred == YTest{m})/numel(YTest{m}); 
+                    for n = 1:4 %for each phase
+                        % n of tot labels for each phase
+                        totPhases(n) = totPhases(n) + sum(YTest{m} == categorical(n)); 
+                        % n of correct prediction for each label
+                        correct(n) = correct(n) + sum(YPred(YTest{m} == categorical(n)) == categorical(n)); 
                     end
                 end 
-                netData.phaseAcc = correct./totPhases;
-                netData.testAcc = acc;
+                netData.phaseAcc = correct./totPhases; %phase acc
+                netData.testAcc = acc; %test acc
 
-                netData.streamAcc = simulateStream(netData.net, file10, 0, 0);
+                netData.streamAcc = simulateStream(netData.net, file10, 0, 0);%stream acc
                     
-                results{i,j,k,l} = netData;
+                results{i,j,k,l} = netData; %saving net
             end
         end
     end

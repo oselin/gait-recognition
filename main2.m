@@ -43,6 +43,8 @@ catch ME
         return;
     end
 end
+
+%define usage of each file
 train = {file01, file02, file03, file04, file06, file07, file08, file09, file11, file12, file13, file14, file15};
 test  = {file05, file10};
 
@@ -63,7 +65,7 @@ layers = [ ...
     softmaxLayer
     classificationLayer];
 
-%% -Setting the options for the LSTM
+%% -Setting the options for training
 miniBatchSize = 1000;
 maxEpochs = 100;
 gradientThreshold = 2;
@@ -78,6 +80,7 @@ options = trainingOptions(...
     'Plots','training-progress', ...
     'ExecutionEnvironment', executionEnvironment);
 
+%train or load
 % net = trainNetwork(XTrain,YTrain,layers,options);
 net = results{1,1,1,1}.net;    
 
@@ -113,8 +116,9 @@ end
 disp(acc);
 
 %% SIMULATE THE DATASTREAM
-% tic;
-% disp(simulateStream(net, file10, 0, 0));
-% disp(toc);
+tic;
+disp(simulateStream(net, file10, 0, 0));
+disp(toc); %compute elapsed time for datastream simulation
+
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);

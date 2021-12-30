@@ -12,9 +12,10 @@ function [X,Y] = dataPreprocessing(dataset)
     %           table reshaping into transposed matrix
     % ---------------------------------------------------------------------
     
-    X = cell(numel(dataset),1);
-    Y = cell(numel(dataset),1);
+    X = cell(numel(dataset),1); %to store data stream
+    Y = cell(numel(dataset),1); %to store labels
     
+    %data to keep from input dataset
     useful_data = [ 'AccX (g)', 'AccY (g)', 'AccZ (g)', ...
                     'GyroX (deg/s)', 'GyroY (deg/s)', 'GyroZ (deg/s)', ...
                     'EulerX (deg)', 'EulerY (deg)', 'EulerZ (deg)', ...
@@ -22,25 +23,28 @@ function [X,Y] = dataPreprocessing(dataset)
                     'ID'];
 
     for i = 1:numel(dataset)
-        file = dataset{i};
+        %extract i-th file
+        file = dataset{i}; 
 
-        %data labeling
+        %% data labeling
         file = detectPhases_3(file);
 
-        %remove rows with label = 0
+        %% remove rows with label = 0
         file(table2array(file(:,end))==0,:) = [];
 
-        %delete useless columns FOR THIS KIND OF SENSOR
+        %% delete useless columns FOR THIS KIND OF SENSOR
+        %extract file columns name
         columns = file.Properties.VariableNames;
         for j = 1:width(columns)
+            %if column's name isn0t in useful_data
             if(isempty(strfind(useful_data,columns{j})))
+                %delete column
                 file(:,columns(j)) = [];
             end
         end
 
-        %split label and transpose the table
+        %split data and label and transpose the table
         X{i} = transpose(table2array(file(:,1:end-1)));
-        %transpose label as categorical
         Y{i} = transpose(categorical(table2array(file(:,end))));
 
     end

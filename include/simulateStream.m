@@ -28,11 +28,17 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
 
         
         if reset_label
+            % update all labels
             y_to_plot = grp2idx(y)';
         else
+            % add only new last label
             y_to_plot = [y_to_plot(2:end) grp2idx(y(end))];
-            results(i) = grp2idx(y(end));
+            
         end
+        
+        % save stream-like classification result to compute accuracy
+        results(i) = grp2idx(y(end)); 
+
         if graphicsEnabled
             to_plot = DATASTREAM(3,:);
             time = i:i+TIMEFRAME-1;
@@ -42,6 +48,8 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
         end
 
     end
+
+    % compute accuracy
     acc = sum(results == table2array(testData(:,end)))/height(testData);
 %     disp("accuracy in stream simulation: " + num2str(acc));
 end

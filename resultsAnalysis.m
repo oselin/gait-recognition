@@ -14,13 +14,13 @@ clc
 addpath("include");
 addpath("output");
 
-load("results.mat");
+load("results.mat"); %trained nets
 [I,J,K,L] = size(results);
 
-streamAcc = zeros(I, J, K, L);
-meanTestAcc = zeros(I, J, K, L);
-meanPhaseAcc = zeros(I, J, K, L);
-flatten_result = cell(54,1);
+streamAcc = zeros(I, J, K, L); %stream accuracy
+meanTestAcc = zeros(I, J, K, L); %test mean accuracy
+meanPhaseAcc = zeros(I, J, K, L); %phases mean accuracy
+flatten_result = cell(54,1); %trained nets in monodimensional array
 
 %% Overall analysis
 disp("Overall analysis");
@@ -29,6 +29,7 @@ for i = 1:I
     for j = 1:J
         for k = 1:K
             for l = 1:L
+                %fill previously defined structures
                 flatten_result{(i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l} = results{i,j,k,l};
                 streamAcc(i,j,k,l) = results{i,j,k,l}.streamAcc;
                 meanTestAcc(i,j,k,l) = mean(results{i,j,k,l}.testAcc);
@@ -38,9 +39,11 @@ for i = 1:I
     end
 end
 
+%compute max for each accuracy
 [MstreamAcc,IstreamAcc] = max(streamAcc,[],"all");
 [MtestAcc,ItestAcc] = max(meanTestAcc,[],"all");
 [MphaseAcc,IphaseAcc] = max(meanPhaseAcc,[],"all");
+%desplay related net
 disp(flatten_result{IstreamAcc});
 disp(flatten_result{ItestAcc});
 disp(flatten_result{IphaseAcc});
@@ -48,25 +51,27 @@ disp(flatten_result{IphaseAcc});
 %% Net type analysis
 
 markerSize = 3;
-gru = zeros(3,3);
-ltsm = zeros(3,3);
-x = zeros(1,3);
+gru = zeros(3,3); %values for gru-type nets
+ltsm = zeros(3,3); %values for ltsm-type nets
+x = zeros(1,3); %x-axis values
 
 t = tiledlayout('flow','TileSpacing','Compact');
 title(t,'Networks accuracy by type, varying:');
 
 %nHiddenLayers
 
-for j= 1:J
+for j= 1:J %for each nHiddenLayers value
+    % compute mean accuracy among other params (maxEpochs, gradientThreshold):
     x(j) = results{1,j,1,1}.nHiddenLayers;
-    gru(1,j) = mean(streamAcc(1,j,:,:),"all");
-    gru(2,j) = mean(meanTestAcc(1,j,:,:),"all");
-    gru(3,j) = mean(meanPhaseAcc(1,j,:,:),"all");
-    ltsm(1,j) = mean(streamAcc(2,j,:,:),"all");
-    ltsm(2,j) = mean(meanTestAcc(2,j,:,:),"all");
-    ltsm(3,j) = mean(meanPhaseAcc(2,j,:,:),"all");
+    gru(1,j) = mean(streamAcc(1,j,:,:),"all"); %mean stream acc for gru nets
+    gru(2,j) = mean(meanTestAcc(1,j,:,:),"all"); %mean test acc for gru nets
+    gru(3,j) = mean(meanPhaseAcc(1,j,:,:),"all"); %mean phase acc for gru nets
+    ltsm(1,j) = mean(streamAcc(2,j,:,:),"all"); %mean stream acc for ltsm nets
+    ltsm(2,j) = mean(meanTestAcc(2,j,:,:),"all"); %mean test acc for ltsm nets
+    ltsm(3,j) = mean(meanPhaseAcc(2,j,:,:),"all"); %mean phase acc for ltsm nets
 end
 
+%results plot
 nexttile
 hold on
 plot(x, gru(1,:), 'r-o', "MarkerSize", markerSize);
@@ -81,7 +86,8 @@ xlabel('N of hidden layers');
 
 %maxEpochs
 
-for k= 1:K
+for k= 1:K %for each maxEpochs value
+    % compute mean accuracy among other params (nHiddenLayers, gradientThreshold):
     x(k) = results{1,1,k,1}.maxEpochs;
     gru(1,k) = mean(streamAcc(1,:,k,:),"all");
     gru(2,k) = mean(meanTestAcc(1,:,k,:),"all");
@@ -91,6 +97,7 @@ for k= 1:K
     ltsm(3,k) = mean(meanPhaseAcc(2,:,k,:),"all");
 end
 
+%results plot
 nexttile
 hold on
 plot(x, gru(1,:), 'r-o', "MarkerSize", markerSize);
@@ -100,14 +107,16 @@ plot(x, ltsm(1,:), 'b-o', "MarkerSize", markerSize);
 plot(x, ltsm(2,:), 'b--o', "MarkerSize", markerSize);
 plot(x, ltsm(3,:), 'b:o', "MarkerSize", markerSize);
 hold off
+%define legend properties
 hleg1 = legend(["GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "LTSM streamAcc", "LTSM testAcc", "LTSM phaseAcc"], ...
     'FontSize',14);
-set(hleg1,'position',[0.6 0.1 0.3 0.3])
+set(hleg1,'position',[0.6 0.1 0.3 0.3]);
 xlabel('N of epochs');
 
 %gradientThreshold
 
-for l= 1:L
+for l= 1:L %for each gradientThreshold value
+    % compute mean accuracy among other params (nHiddenLayers, maxEpochs):
     x(l) = results{1,1,1,l}.gradientThreshold;
     gru(1,l) = mean(streamAcc(1,:,:,l),"all");
     gru(2,l) = mean(meanTestAcc(1,:,:,l),"all");
@@ -117,6 +126,7 @@ for l= 1:L
     ltsm(3,l) = mean(meanPhaseAcc(2,:,:,l),"all");
 end
 
+%results plot
 nexttile
 hold on
 plot(x, gru(1,:), 'r-o', "MarkerSize", markerSize);
@@ -131,6 +141,7 @@ xlabel('Gradient threshold');
 
 return
 
+% same as above, with results display (no plot)
 disp("  N hidden layers");
 disp("  nHiddenLayers      stream            test              phase");
 disp("GRU");
