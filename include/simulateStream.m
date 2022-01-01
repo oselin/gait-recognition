@@ -6,10 +6,10 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
     %   SIMULATE STREAM FUNCTION
     % ---------------------------------------------------------------------
 
-    TIMEFRAME = 350; %[ms]
+    TIMEFRAME  = 350; %[ms]
     DATASTREAM = zeros(12, TIMEFRAME);%specifically for this kind of IMU SENSOR
-    results = zeros(height(testData),1); 
-    testData = detectPhases_3(testData);%labeling
+    results    = zeros(height(testData),1); 
+    testData   = detectPhases_3(testData);%labeling
 
     y_to_plot = zeros(1,TIMEFRAME);
     
@@ -50,6 +50,6 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
     end
 
     % compute accuracy
-    acc = sum(results == table2array(testData(:,end)))/height(testData);
+    acc = sum(results == testData{:,end})/height(testData);
 %     disp("accuracy in stream simulation: " + num2str(acc));
 end

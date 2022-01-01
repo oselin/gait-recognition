@@ -14,12 +14,19 @@ clc
 addpath("include");
 addpath("output");
 
-load("results.mat"); %trained nets
+try
+    load("results.mat"); %trained nets
+catch ME
+    if strcmp(ME.identifier, 'MATLAB:textio:textio:FileNotFound')
+        disp("ERROR: result data cannot be found");
+        return;
+    end
+end
 [I,J,K,L] = size(results);
 
-streamAcc = zeros(I, J, K, L); %stream accuracy
-meanTestAcc = zeros(I, J, K, L); %test mean accuracy
-meanPhaseAcc = zeros(I, J, K, L); %phases mean accuracy
+streamAcc      = zeros(I, J, K, L); %stream accuracy
+meanTestAcc    = zeros(I, J, K, L); %test mean accuracy
+meanPhaseAcc   = zeros(I, J, K, L); %phases mean accuracy
 flatten_result = cell(54,1); %trained nets in monodimensional array
 
 %% Overall analysis
@@ -31,8 +38,8 @@ for i = 1:I
             for l = 1:L
                 %fill previously defined structures
                 flatten_result{(i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l} = results{i,j,k,l};
-                streamAcc(i,j,k,l) = results{i,j,k,l}.streamAcc;
-                meanTestAcc(i,j,k,l) = mean(results{i,j,k,l}.testAcc);
+                streamAcc(i,j,k,l)    = results{i,j,k,l}.streamAcc;
+                meanTestAcc(i,j,k,l)  = mean(results{i,j,k,l}.testAcc);
                 meanPhaseAcc(i,j,k,l) = mean(results{i,j,k,l}.phaseAcc);
             end
         end
@@ -40,10 +47,10 @@ for i = 1:I
 end
 
 %compute max for each accuracy
-[MstreamAcc,IstreamAcc] = max(streamAcc,[],"all");
-[MtestAcc,ItestAcc] = max(meanTestAcc,[],"all");
-[MphaseAcc,IphaseAcc] = max(meanPhaseAcc,[],"all");
-%desplay related net
+[MstreamAcc,IstreamAcc] = max(streamAcc,[],   "all");
+[MtestAcc,ItestAcc]     = max(meanTestAcc,[], "all");
+[MphaseAcc,IphaseAcc]   = max(meanPhaseAcc,[],"all");
+%display the related net
 disp(flatten_result{IstreamAcc});
 disp(flatten_result{ItestAcc});
 disp(flatten_result{IphaseAcc});

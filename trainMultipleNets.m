@@ -41,11 +41,11 @@ catch ME
     end
 end
 train = {file01, file02, file03, file04, file06, file07, file08, file09, file11, file12, file13, file14, file15};
-test = {file05, file10};
+test  = {file05, file10};
 
 %% Labeling and preparing data to train and test the network
 [XTrain,YTrain] = dataPreprocessing(train);
-[XTest,YTest] = dataPreprocessing(test);
+[XTest,YTest]   = dataPreprocessing(test);
 
 %% Parameters of the RNN network
 % Constant parameters
@@ -56,9 +56,9 @@ MiniBatchSize = 1000;
 
 % Variable parameters
 NetType = { 'gru', 'lstm'};
-NHiddenLayers = [50 100 150];
-MaxEpochs = [150 175 200];
-GradientThreshold = [1 1.5 2];
+NHiddenLayers     = [50  100 150];
+MaxEpochs         = [150 175 200];
+GradientThreshold = [1   1.5 2];
 
 % struct were save net, params and accuracies
 netData = struct(...
@@ -85,8 +85,8 @@ disp("Start training");
 layers = []; %net structure
 
 % to compute phase accuracy
-correct = zeros(1,4); %result from classification
-totPhases = zeros(1,4); %correct label
+correct   = zeros(1,NumClasses); %result from classification
+totPhases = zeros(1,NumClasses); %correct label
 
 % to compute test accuracy
 acc = zeros(1,length(XTest));
@@ -146,7 +146,7 @@ for i = 1:I
                     YPred = classify(netData.net,XTest{m}); 
                     %test accuracy
                     acc(m) = sum(YPred == YTest{m})/numel(YTest{m}); 
-                    for n = 1:4 %for each phase
+                    for n = 1:NumClasses %for each phase
                         % n of tot labels for each phase
                         totPhases(n) = totPhases(n) + sum(YTest{m} == categorical(n)); 
                         % n of correct prediction for each label
