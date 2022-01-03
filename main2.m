@@ -55,19 +55,19 @@ test  = {file05, file10};
 %% Setting up the RNN network
 %% -General settings
 numFeatures = height(XTrain{1});
-numHiddenUnits = 50;
+numHiddenUnits = 100;
 numClasses = 4;
 
 layers = [ ...
     sequenceInputLayer(numFeatures)
-    gruLayer(numHiddenUnits,'OutputMode','sequence')
+    lstmLayer(numHiddenUnits,'OutputMode','sequence')
     fullyConnectedLayer(numClasses)
     softmaxLayer
     classificationLayer];
 
 %% -Setting the options for training
 miniBatchSize = 1000;
-maxEpochs = 100;
+maxEpochs = 250;
 gradientThreshold = 2;
 executionEnvironment = 'cpu';
 
@@ -77,7 +77,7 @@ options = trainingOptions(...
     'MaxEpochs',maxEpochs, ...
     'GradientThreshold', gradientThreshold, ...
     'Verbose', 0, ...
-    'Plots','training-progress', ...
+    'Plots','none', ...
     'ExecutionEnvironment', executionEnvironment);
 
 %train or load
@@ -96,13 +96,10 @@ disp("Accuracy per phase:")
 correct = zeros(1,4);
 totPhases = zeros(1,4);
 for i = 1:length(XTest)
-    tic
     YPred = classify(net,XTest{i});
-    disp("Classify time: "+num2str(toc));
     for j = 1:4
         totPhases(j) = totPhases(j) + sum(YTest{i} == categorical(j));
-        correct(j) = correct(j) + sum(YPred(YTest{i} == categorical(j)) == categorical(j));
-        
+        correct(j) = correct(j) + sum(YPred(YTest{i} == categorical(j)) == categorical(j));      
     end
 end 
 disp(correct./totPhases);
@@ -116,9 +113,8 @@ end
 disp(acc);
 
 %% SIMULATE THE DATASTREAM
-tic;
-disp(simulateStream(net, file10, 0, 0));
-disp(toc); %compute elapsed time for datastream simulation
+
+disp(simulateStream(net, file10, 0, 1));
 
 %% Data visualization
 %dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);

@@ -1,5 +1,6 @@
 %% ------------------------------------------------------------------------
-%   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+%   Analysis from results of function trainMultipleNets   
+%
 %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
 %
 %   Required packages:
@@ -14,13 +15,19 @@ clc
 addpath("include");
 addpath("output");
 
-load("results.mat"); %trained nets
+load("results.mat"); %trained nets from function trainMultipleNets
 [I,J,K,L] = size(results);
 
-streamAcc = zeros(I, J, K, L); %stream accuracy
+%stream accuracy: accuracy calculated in a stream like simulation where
+streamAcc = zeros(I, J, K, L); 
 meanTestAcc = zeros(I, J, K, L); %test mean accuracy
 meanPhaseAcc = zeros(I, J, K, L); %phases mean accuracy
 flatten_result = cell(54,1); %trained nets in monodimensional array
+flatten_streamAcc = zeros(54,1); %stream accuracy in monodimensional array
+flatten_meanTestAcc = zeros(54,1); %test accuracy in monodimensional array
+flatten_meanPhaseAcc = zeros(54,1); %phases accuracy in monodimensional array
+
+
 
 %% Overall analysis
 disp("Overall analysis");
@@ -34,15 +41,18 @@ for i = 1:I
                 streamAcc(i,j,k,l) = results{i,j,k,l}.streamAcc;
                 meanTestAcc(i,j,k,l) = mean(results{i,j,k,l}.testAcc);
                 meanPhaseAcc(i,j,k,l) = mean(results{i,j,k,l}.phaseAcc);
+                flatten_streamAcc((i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l) = streamAcc(i,j,k,l);
+                flatten_meanTestAcc((i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l) = meanTestAcc(i,j,k,l);
+                flatten_meanPhaseAcc((i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l) = meanPhaseAcc(i,j,k,l);
             end
         end
     end
 end
 
 %compute max for each accuracy
-[MstreamAcc,IstreamAcc] = max(streamAcc,[],"all");
-[MtestAcc,ItestAcc] = max(meanTestAcc,[],"all");
-[MphaseAcc,IphaseAcc] = max(meanPhaseAcc,[],"all");
+[MstreamAcc,IstreamAcc] = max(flatten_streamAcc);
+[MtestAcc,ItestAcc] = max(flatten_meanTestAcc);
+[MphaseAcc,IphaseAcc] = max(flatten_meanPhaseAcc);
 %desplay related net
 disp(flatten_result{IstreamAcc});
 disp(flatten_result{ItestAcc});
@@ -52,7 +62,7 @@ disp(flatten_result{IphaseAcc});
 
 markerSize = 3;
 gru = zeros(3,3); %values for gru-type nets
-ltsm = zeros(3,3); %values for ltsm-type nets
+lstm = zeros(3,3); %values for lstm-type nets
 x = zeros(1,3); %x-axis values
 
 t = tiledlayout('flow','TileSpacing','Compact');
@@ -66,9 +76,9 @@ for j= 1:J %for each nHiddenLayers value
     gru(1,j) = mean(streamAcc(1,j,:,:),"all"); %mean stream acc for gru nets
     gru(2,j) = mean(meanTestAcc(1,j,:,:),"all"); %mean test acc for gru nets
     gru(3,j) = mean(meanPhaseAcc(1,j,:,:),"all"); %mean phase acc for gru nets
-    ltsm(1,j) = mean(streamAcc(2,j,:,:),"all"); %mean stream acc for ltsm nets
-    ltsm(2,j) = mean(meanTestAcc(2,j,:,:),"all"); %mean test acc for ltsm nets
-    ltsm(3,j) = mean(meanPhaseAcc(2,j,:,:),"all"); %mean phase acc for ltsm nets
+    lstm(1,j) = mean(streamAcc(2,j,:,:),"all"); %mean stream acc for lstm nets
+    lstm(2,j) = mean(meanTestAcc(2,j,:,:),"all"); %mean test acc for lstm nets
+    lstm(3,j) = mean(meanPhaseAcc(2,j,:,:),"all"); %mean phase acc for lstm nets
 end
 
 %results plot
@@ -77,11 +87,11 @@ hold on
 plot(x, gru(1,:), 'r-o', "MarkerSize", markerSize);
 plot(x, gru(2,:), 'r--o', "MarkerSize", markerSize);
 plot(x, gru(3,:), 'r:o', "MarkerSize", markerSize);
-plot(x, ltsm(1,:), 'b-o', "MarkerSize", markerSize);
-plot(x, ltsm(2,:), 'b--o', "MarkerSize", markerSize);
-plot(x, ltsm(3,:), 'b:o', "MarkerSize", markerSize);
+plot(x, lstm(1,:), 'b-o', "MarkerSize", markerSize);
+plot(x, lstm(2,:), 'b--o', "MarkerSize", markerSize);
+plot(x, lstm(3,:), 'b:o', "MarkerSize", markerSize);
 hold off
-% legend("GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "LTSM streamAcc", "LTSM testAcc", "LTSM phaseAcc");
+% legend("GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "lstm streamAcc", "lstm testAcc", "lstm phaseAcc");
 xlabel('N of hidden layers');
 
 %maxEpochs
@@ -92,9 +102,9 @@ for k= 1:K %for each maxEpochs value
     gru(1,k) = mean(streamAcc(1,:,k,:),"all");
     gru(2,k) = mean(meanTestAcc(1,:,k,:),"all");
     gru(3,k) = mean(meanPhaseAcc(1,:,k,:),"all");
-    ltsm(1,k) = mean(streamAcc(2,:,k,:),"all");
-    ltsm(2,k) = mean(meanTestAcc(2,:,k,:),"all");
-    ltsm(3,k) = mean(meanPhaseAcc(2,:,k,:),"all");
+    lstm(1,k) = mean(streamAcc(2,:,k,:),"all");
+    lstm(2,k) = mean(meanTestAcc(2,:,k,:),"all");
+    lstm(3,k) = mean(meanPhaseAcc(2,:,k,:),"all");
 end
 
 %results plot
@@ -103,12 +113,12 @@ hold on
 plot(x, gru(1,:), 'r-o', "MarkerSize", markerSize);
 plot(x, gru(2,:), 'r--o', "MarkerSize", markerSize);
 plot(x, gru(3,:), 'r:o', "MarkerSize", markerSize);
-plot(x, ltsm(1,:), 'b-o', "MarkerSize", markerSize);
-plot(x, ltsm(2,:), 'b--o', "MarkerSize", markerSize);
-plot(x, ltsm(3,:), 'b:o', "MarkerSize", markerSize);
+plot(x, lstm(1,:), 'b-o', "MarkerSize", markerSize);
+plot(x, lstm(2,:), 'b--o', "MarkerSize", markerSize);
+plot(x, lstm(3,:), 'b:o', "MarkerSize", markerSize);
 hold off
 %define legend properties
-hleg1 = legend(["GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "LTSM streamAcc", "LTSM testAcc", "LTSM phaseAcc"], ...
+hleg1 = legend(["GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "lstm streamAcc", "lstm testAcc", "lstm phaseAcc"], ...
     'FontSize',14);
 set(hleg1,'position',[0.6 0.1 0.3 0.3]);
 xlabel('N of epochs');
@@ -121,9 +131,9 @@ for l= 1:L %for each gradientThreshold value
     gru(1,l) = mean(streamAcc(1,:,:,l),"all");
     gru(2,l) = mean(meanTestAcc(1,:,:,l),"all");
     gru(3,l) = mean(meanPhaseAcc(1,:,:,l),"all");
-    ltsm(1,l) = mean(streamAcc(2,:,:,l),"all");
-    ltsm(2,l) = mean(meanTestAcc(2,:,:,l),"all");
-    ltsm(3,l) = mean(meanPhaseAcc(2,:,:,l),"all");
+    lstm(1,l) = mean(streamAcc(2,:,:,l),"all");
+    lstm(2,l) = mean(meanTestAcc(2,:,:,l),"all");
+    lstm(3,l) = mean(meanPhaseAcc(2,:,:,l),"all");
 end
 
 %results plot
@@ -132,11 +142,11 @@ hold on
 plot(x, gru(1,:), 'r-o', "MarkerSize", markerSize);
 plot(x, gru(2,:), 'r--o', "MarkerSize", markerSize);
 plot(x, gru(3,:), 'r:o', "MarkerSize", markerSize);
-plot(x, ltsm(1,:), 'b-o', "MarkerSize", markerSize);
-plot(x, ltsm(2,:), 'b--o', "MarkerSize", markerSize);
-plot(x, ltsm(3,:), 'b:o', "MarkerSize", markerSize);
+plot(x, lstm(1,:), 'b-o', "MarkerSize", markerSize);
+plot(x, lstm(2,:), 'b--o', "MarkerSize", markerSize);
+plot(x, lstm(3,:), 'b:o', "MarkerSize", markerSize);
 hold off
-% legend("GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "LTSM streamAcc", "LTSM testAcc", "LTSM phaseAcc");
+% legend("GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "lstm streamAcc", "lstm testAcc", "lstm phaseAcc");
 xlabel('Gradient threshold');
 
 return
@@ -152,7 +162,7 @@ for j= 1:J
         num2str(mean(meanTestAcc(1,j,:,:),"all"))+"           "+ ...
         num2str(mean(meanPhaseAcc(1,j,:,:),"all")) );
 end
-    disp("LTSM");
+    disp("lstm");
 for j= 1:J
     disp("          "+ ...
         num2str(results{2,j,1,1}.nHiddenLayers)+"            "+ ...
@@ -171,7 +181,7 @@ for k= 1:K
         num2str(mean(meanTestAcc(1,:,k,:),"all"))+"           "+ ...
         num2str(mean(meanPhaseAcc(1,:,k,:),"all")) );
 end
-disp("LTSM");
+disp("lstm");
 for k= 1:K
     disp("          "+ ...
         num2str(results{2,1,k,1}.maxEpochs)+"            "+ ...
@@ -190,7 +200,7 @@ for l= 1:L
         num2str(mean(meanTestAcc(1,:,:,l),"all"))+"           "+ ...
         num2str(mean(meanPhaseAcc(1,:,:,l),"all")) );
 end
-disp("LTSM");
+disp("lstm");
 for l= 1:L
     disp("          "+ ...
         num2str(results{2,1,1,l}.gradientThreshold)+"            "+ ...
