@@ -1,6 +1,5 @@
 %% ------------------------------------------------------------------------
-%   Analysis from results of function trainMultipleNets   
-%
+%%  GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
 %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
 %
 %   Required packages:
@@ -8,6 +7,15 @@
 %   Neural Network Toolbox
 %   Signal Toolbox
 %   Statistics Toolbox
+%
+%%  Analysis from results of function trainMultipleNets   
+% -------------------------------------------------------------------------
+
+%% ------------------------------------------------------------------------
+%%  GOAL OF THE FUNCTION
+%   Goal of this function is evaluate the performances of the trained
+%   network in order to choose the best one.
+%   We consider phase accuracy, test accuracy and stream accuracy
 % -------------------------------------------------------------------------
 clear ;
 close all;

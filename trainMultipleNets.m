@@ -1,5 +1,5 @@
 %% ------------------------------------------------------------------------
-%   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+%%  GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
 %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
 %
 %   Required packages:
@@ -8,6 +8,13 @@
 %   Signal Toolbox
 %   Statistics Toolbox
 % -------------------------------------------------------------------------
+
+%% ------------------------------------------------------------------------
+%%  GOAL OF THE FUNCTION
+%   Goal of this function is training several networks in order to find the
+%   one that provides the better performances
+% -------------------------------------------------------------------------
+
 clear ;
 close all;
 clc
