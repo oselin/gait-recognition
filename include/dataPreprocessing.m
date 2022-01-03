@@ -1,9 +1,17 @@
 function [X,Y] = dataPreprocessing(dataset)
     %% --------------------------------------------------------------------
-    %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+    %%  GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
     %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
     %
-    %   DATA PREPROCESSING FUNCTIO
+    %   DATA PREPROCESSING FUNCTION
+    % ---------------------------------------------------------------------
+
+    %%  GOAL OF THE FUNCTION
+    %   Goal of this function is performing pre-processing operations in
+    %   order to accomodate data structures for the training network
+    % ---------------------------------------------------------------------
+
+    %% --------------------------------------------------------------------
     %   INPUT: cell array of tables
     %   OUTPUT: cell array of formatted data as net input
     %   STEPS:  labeling
@@ -23,27 +31,27 @@ function [X,Y] = dataPreprocessing(dataset)
                     'ID'];
 
     for i = 1:numel(dataset)
-        %extract i-th file
+        %% Extract i-th file
         file = dataset{i}; 
 
-        %% data labeling
+        %% Data labeling
         file = detectPhases_3(file);
 
-        %% remove rows with label = 0
+        %% Remove rows with label = 0
         file(file{:,end}==0,:) = [];
 
-        %% delete useless columns FOR THIS KIND OF SENSOR
-        %extract file columns name
+        %% Delete useless columns FOR THIS KIND OF SENSOR
+        % extract file columns name
         columns = file.Properties.VariableNames;
         for j = 1:width(columns)
-            %if column's name isn0t in useful_data
+            % if column's name isn0t in useful_data
             if(isempty(strfind(useful_data,columns{j})))
-                %delete column
+                % delete column
                 file(:,columns(j)) = [];
             end
         end
 
-        %split data and label and transpose the table
+        % split data and label and transpose the table
         X{i} = transpose(file{:,1:end-1});
         Y{i} = transpose(categorical(file{:,end}));
 

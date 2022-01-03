@@ -1,17 +1,24 @@
 function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
     %% --------------------------------------------------------------------
-    %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+    %%  GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
     %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
     %
     %   SIMULATE STREAM FUNCTION
     % ---------------------------------------------------------------------
+    
+    %%  GOAL OF THE FUNCTION
+    %   Goal of this function is simulating incoming data and trying to
+    %   label them. Eventually estimate the obtained performances
+    %   (=accuracy)
+    % ---------------------------------------------------------------------
 
-    TIMEFRAME  = 350; %[ms]
-    DATASTREAM = zeros(12, TIMEFRAME);%specifically for this kind of IMU SENSOR
+    % define some parameters
+    TIMEFRAME  = 350;                       % the timeframe window we consider in this function
+    DATASTREAM = zeros(12, TIMEFRAME);      %specifically for this kind of IMU SENSOR
     results    = zeros(height(testData),1); 
-    testData   = detectPhases_3(testData);%labeling
+    testData   = detectPhases_3(testData);  %labeling
 
-    y_to_plot = zeros(1,TIMEFRAME);
+    y_to_plot = zeros(1,TIMEFRAME); %vector in which storing data
     
     for i = 1:height(testData)
 
@@ -24,9 +31,7 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
         DATASTREAM = [DATASTREAM(:,2:end) new_stream'];
         %Predict the label
         y = classify(network, DATASTREAM);
-          
-
-        
+                
         if reset_label
             % update all labels
             y_to_plot = grp2idx(y)';
@@ -44,12 +49,11 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
             time = i:i+TIMEFRAME-1;
             plotLabeledData([to_plot' y_to_plot'], time);
             xlim([i i+TIMEFRAME-1]);
-%             pause(0.01);
+            %pause(0.01); %0.01 is the frequency of the incoming data [100Hz]
         end
 
     end
 
     % compute accuracy
     acc = sum(results == testData{:,end})/height(testData);
-%     disp("accuracy in stream simulation: " + num2str(acc));
 end

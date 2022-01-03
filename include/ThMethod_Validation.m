@@ -1,5 +1,5 @@
- %% --------------------------------------------------------------------
-    %   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+    %% --------------------------------------------------------------------
+    %%  GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
     %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
     %
     %   GAIT PHASE RECOGNITION: OFFLINE AUTOMATIC THREASHOLD METHOD
