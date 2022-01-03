@@ -1,20 +1,69 @@
 classdef LpmsBT < handle
+%% ------------------------------------------------------------------------
+%   GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
+%   LIBRARY TO MANAGE COMMUNICATION WITH LPMSB2 SENSOR
+%   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
+%
+%   Based on the library:
+%       https://bitbucket.org/lpresearch/lpsensormatlab/src/master/lpms.m
+%       Lpms class to interface with LpmsSensors
+%
+%       Known Issues:
+%       - Serial Interrupt routine blocks main processing thread
+%           when transferring at data rate > 100Hz 
+%
+%       TODO: 
+%       - Implement 16bit data parsing
+%
+%
+%       Author: H.E.Yap
+%       Date: 2016/07/19    
+%       Revision: 0.1 
+%       Copyright: LP-Research Inc. 2016
+%       
+%
+%   NB: You must pair the device with your computer first before conencting 
+%   to it 
+%
+%   GENERAL: to read an answer an interrupt like approach is used. To 
+%   enable an interrupt the function configureCallback is used. To set the 
+%   interrupt is passed the number of bytes the programm must receive to 
+%   trigger the interrupt and the function to call when the interrupt is 
+%   triggered. The function called is readCallbackFcn: it reads all the 
+%   data available on the input buffer and parse it calling the parse 
+%   function. The parse function read each byte until a full packet is red, 
+%   extracting all the needed info like packet function, data lenght and 
+%   raw data, saving them in object variables. Then the parseFunction 
+%   method is called, checking the packet function and executing the right 
+%   instructions according to it (parsing data in case of get instruction,
+%   check ack in case of set instruction).
+%   After all data in input buffer has been red, the program proceeds with
+%   normal execution.
+%   NB in case of streaming mode, the interrupt is triggere every time a
+%   packet is received.
+%
+% TODO: 
+% - Implement 16bit data parsing
+% - Implement get serail number
+% - Implement get firmware info
+%
+% -------------------------------------------------------------------------
     
     properties (Constant)
         %the name the code will loking for when performing connection
         DEV_NAME = "LPMSB2";
         
-        %definition of bytes position in a packet
-        PACKET_ADDRESS0     = 0;
-        PACKET_ADDRESS1     = 1;
-        PACKET_FUNCTION0    = 2;
-        PACKET_FUNCTION1    = 3;
-        PACKET_LENGTH0      = 4;
-        PACKET_LENGTH1      = 5;
-        PACKET_RAW_DATA     = 6;
-        PACKET_LRC_CHECK0   = 7;
-        PACKET_LRC_CHECK1   = 8;
-        PACKET_END          = 9;
+        %definition of parse phases in a packet, read:
+        PACKET_ADDRESS0     = 0; %1st byte address
+        PACKET_ADDRESS1     = 1; %2nd byte address
+        PACKET_FUNCTION0    = 2; %1st byte function identifier 
+        PACKET_FUNCTION1    = 3; %2nd byte function identifier
+        PACKET_LENGTH0      = 4; %1st byte number of byte in the packet 
+        PACKET_LENGTH1      = 5; %2nd byte number of byte in the packet 
+        PACKET_RAW_DATA     = 6; %data
+        PACKET_LRC_CHECK0   = 7; %1st byte LRC check
+        PACKET_LRC_CHECK1   = 8; %2nd byte LRC check
+        PACKET_END          = 9; %trailer
 
         %data lenght for program's buffers
         MAX_BUFFER = 4096;
@@ -29,16 +78,18 @@ classdef LpmsBT < handle
         GET_SENSOR_DATA       = 9;  %data request        
         SET_TRANSMIT_DATA     = 10; %set data to transmit
         SET_STREAM_FREQ       = 11; %set freq of streaming mode
-        GET_SERIAL_NUMBER     = 90; %request serial number
+        GET_SERIAL_NUMBER     = 90; %request serial number, not implemented
         GET_DEVICE_NAME       = 91; %request sensor name
-        GET_FIRMWARE_INFO     = 92; %request firmware info
+        GET_FIRMWARE_INFO     = 92; %request firmware info, not implemented
         
         %shift values to build the sent raw data to config transmit data
+        %see enableTransmitData function
         SHIFT_SET_TRANSMIT_DATA = [9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 21];
         DEFAULT_TRANSMIT_DATA =   [0,  0,  1,  1,  0,  0,  0,  1,  0,  0,  1];
 
         %Configuration register contents
-        %definition of bit vectors to extract properly the info from the
+        %definition of bit vectors to extract properly the info from an
+        %answer to a getConfig command
         LPMS_GYR_AUTOCAL_ENABLED = bitshift(1, 30);
         LPMS_LPBUS_DATA_MODE_16BIT_ENABLED = bitshift(1, 22);
         LPMS_LINACC_OUTPUT_ENABLED = bitshift(1, 21);
@@ -55,7 +106,7 @@ classdef LpmsBT < handle
         LPMS_MAG_RAW_OUTPUT_ENABLED = bitshift(1, 10);
         LPMS_PRESSURE_OUTPUT_ENABLED = bitshift(1, 9);
 
-        %values red by get_config
+        %stream freq values red by getConfig
         LPMS_STREAM_FREQ_5HZ_ENABLED      = 0; 
         LPMS_STREAM_FREQ_10HZ_ENABLED     = 1;
         LPMS_STREAM_FREQ_30HZ_ENABLED     = 2;
@@ -65,7 +116,7 @@ classdef LpmsBT < handle
         LPMS_STREAM_FREQ_300HZ_ENABLED    = 6;
         LPMS_STREAM_FREQ_500HZ_ENABLED    = 7;
 
-        LPMS_STREAM_FREQ_MASK             = 7; %to extract stream freq from get_config
+        LPMS_STREAM_FREQ_MASK             = 7; %to extract stream freq from getConfig
         
         %set values
         LPMS_STREAM_FREQ_5HZ = 5;
@@ -97,11 +148,11 @@ classdef LpmsBT < handle
         % define the properties of the class here, (like fields of a struct)
         rxBuffer = uint8(zeros(1, LpmsBT.MAX_BUFFER)); %buffer for received packets
         rawTxBuffer = uint8(zeros(1, LpmsBT.MAX_BUFFER)); %buffer for data to send
-        inBytes = uint8(zeros(1, 2)); %buffer to aggregate 2 bytes for conversion
+        inBytes = uint8(zeros(1, 2)); %buffer to aggregate 2 bytes for conversion into uint16
         rxState = LpmsBT.PACKET_END; %state of reading data process
         rxIndex = 0; %index in reading data process
 
-        % extracted data during reading data process
+        % extracted data during reading packet process
         currentAddress = 0;
         currentFunction = 0;
         currentLength = 0;
@@ -169,7 +220,9 @@ classdef LpmsBT < handle
     end
 
     methods 
-
+        
+        %% Connect to sensor, set command mode and retrieve actual config
+        %is necessary to get actual config to set enabled sensor booleans
         function ret = connect(obj)
             disp("searching for devices...");
             BTlist = bluetoothlist; %list of available devices
@@ -204,7 +257,7 @@ classdef LpmsBT < handle
                 return;
             end
 
-            %set terminator
+            %define packet terminator
             configureTerminator(obj.BTconn,"CR/LF");
 
             %force command mode
@@ -222,13 +275,14 @@ classdef LpmsBT < handle
             catch e
                 errordlg(e.message);
                 disp(e);
-                obj.disconnect();
+                obj.disconnect(); % in case of error disconnects
             end
 
             ret = obj.isSensorConnected;
 
         end
         
+        %% Disconnect from snesor and reset variables
         function ret = disconnect(obj)
             if(~obj.isSensorConnected)  %check connection
                 ret = false;
@@ -245,7 +299,8 @@ classdef LpmsBT < handle
             disp("disconnected");
 
         end
-
+        
+        %% Set sensor to command mode
         function ret = setCommandMode(obj)
             %ret true if set is successful
             %false if error occures
@@ -267,16 +322,18 @@ classdef LpmsBT < handle
 
             if(obj.ack) %received ACK
                 obj.isStreamMode = false; %now in command mode
-                obj.configCallback("off"); %deactivate interrupt function
+                obj.configCallback("off"); %disable interrupt function
                 ret = true;
             else %received NACK
                 disp("setCommandMode failed");
                 ret = false;
             end
-            obj.ack = false;          
+
+            obj.ack = false; %reset variable    
 
         end
-
+        
+        %% Set sensor to streaming mode
         function ret = setStreamingMode(obj)
             %ret true if set is successful
             %false if error occures
@@ -297,7 +354,7 @@ classdef LpmsBT < handle
             end
 
             if(obj.ack) %received ACK
-                obj.configCallback("off"); %deactivate interrupt function
+                obj.configCallback("off"); %disable interrupt function
                 obj.isStreamMode = true; %now in streaming mode
                 obj.configCallback(11+obj.sensorDataLength); % set interrupt
                 ret = true;
@@ -308,8 +365,10 @@ classdef LpmsBT < handle
             obj.ack = false;
 
         end
-
+        
+        %% Request sensor actual config
         function ret = getConfig(obj)
+            %return false if no connected
             disp("getting config");
             if(~obj.isSensorConnected) %check connection
                 ret = false;
@@ -327,13 +386,14 @@ classdef LpmsBT < handle
             end
 
             if(~obj.isStreamMode) %if not in stream mode
-                obj.configCallback("off"); %deactivate interrupt
+                obj.configCallback("off"); %disable interrupt
             else    
                 obj.configCallback(11+obj.sensorDataLength); % set interrupt
             end
             
         end
-    
+        
+        %% Dispaly actaul config to terminal
         function dispConfig(obj) %display sensor config
             if(~obj.isSensorConnected)
                 disp("no sensor connected");
@@ -385,6 +445,9 @@ classdef LpmsBT < handle
             
         end
         
+        %% Set wich data the sensor will transmit
+        %boolvector: defines wich values will be transmit following the
+        %order listed below
         function ret = setTransmitData(obj,boolVector)
             %ret true if set is successful
             %false if error occures
@@ -428,7 +491,7 @@ classdef LpmsBT < handle
             
             if(obj.ack) %received ACK
                 if(~obj.isStreamMode) %if not in stream mode
-                    obj.configCallback("off"); %deactivate interrupt
+                    obj.configCallback("off"); %disable interrupt
                 else    
                     obj.configCallback(11+obj.sensorDataLength); % set interrupt
                 end
@@ -440,7 +503,8 @@ classdef LpmsBT < handle
             obj.ack = false;
 
         end
-
+        
+        %% Set streaming frequency of the sensor
         function ret = setStreamFreq(obj,freq)
             %ret true if set is successful
             %false if error occures
@@ -452,14 +516,15 @@ classdef LpmsBT < handle
                 disp("no sensor connected");
                 return;
             end
-
-            if(isempty(find(obj.FREQ==freq))) %#ok<EFIND> %check input param
+            
+            %check if input param is an acceptable value
+            if(isempty(find(obj.FREQ==freq))) %#ok<EFIND> 
                 disp("given freq not valid: "+string(freq));
                 ret = false;
                 return;
             end
 
-            commandData = uint32(freq);
+            commandData = uint32(freq);  %data to send is a 4 bytes value
             obj.rawTxBuffer(1:4) = typecast(commandData, 'uint8'); %cast the packet in 4 bytes data vector
             obj.configCallback(11);  % set interrupt
             obj.waitForAck = true;
@@ -472,7 +537,7 @@ classdef LpmsBT < handle
             
             if(obj.ack) %received ACK
                 if(~obj.isStreamMode) %if not in stream mode
-                    obj.configCallback("off"); %deactivate interrupt
+                    obj.configCallback("off"); %disable interrupt
                 else 
                     obj.configCallback(11+obj.sensorDataLength); % set interrupt
                 end
@@ -484,7 +549,8 @@ classdef LpmsBT < handle
             obj.ack = false;
 
         end
-
+        
+        %% Get last data from sensor
         function ret = getCurrentSensorData(obj)
             %ret data if successful
             %empty if fail
@@ -496,14 +562,16 @@ classdef LpmsBT < handle
             end
             
             if (obj.isStreamMode) %if stream mode
-                ret = obj.sensorData; % retrieve newest data from sensor 
+                % retrieve newest data from sensor: last values inserted in
+                % the data struct
+                ret = obj.sensorData;  
             else
                 obj.configCallback(11 + obj.sensorDataLength); % set interrupt
                 obj.waitForData = true;
-                obj.sendData(obj.GET_SENSOR_DATA,0);
+                obj.sendData(obj.GET_SENSOR_DATA,0); % request to send data
                 obj.waitForDataLoop();
                 ret = obj.sensorData;
-                obj.configCallback("off"); %deactivate interrupt
+                obj.configCallback("off"); %disable interrupt
             end
         end
       
@@ -679,43 +747,44 @@ classdef LpmsBT < handle
                 end
             end
         end
-
+        
+        %% Depending on thr function of the packet receive, execute the associated instructions
         function parseFunction(obj)
             switch (obj.currentFunction) %depending on the command ID red:
-                case obj.REPLY_ACK 
+                case obj.REPLY_ACK %set function successful
                     disp('REPLY_ACK') 
-                    obj.waitForAck = false; 
-                    obj.ack = true;
+                    obj.waitForAck = false; %stop waiting for ack
+                    obj.ack = true; %ack is positive
                     return;
                     
-                case obj.REPLY_NACK
+                case obj.REPLY_NACK %set function failed
                     disp('REPLY_NACK') 
-                    obj.waitForAck = false;
-                    obj.ack = false;
+                    obj.waitForAck = false; %stop waiting for ack
+                    obj.ack = false; %ack is negative
                     return;
             
-                case obj.GET_CONFIG
+                case obj.GET_CONFIG %response to setConfig
                     disp('GET_CONFIG') 
                     obj.configurationRegister = obj.convertRxbytesToInt(0, obj.rxBuffer); %cast to int
                     obj.parseConfig(obj.configurationRegister); %parse config data
-                    obj.waitForData = false;
+                    obj.waitForData = false; %stop waiting for data
                     return;
                     
-                case obj.GET_SENSOR_DATA
+                case obj.GET_SENSOR_DATA %sensor data packet
                     disp('GET_SENSOR_DATA')
                     obj.parseSensorData(); %parse sensor data
-                    obj.waitForData = false;
+                    obj.waitForData = false; %stop waiting for data
                     return;
                     
-                case obj.GET_DEVICE_NAME
+                case obj.GET_DEVICE_NAME %name data packet
 %                     disp('GET_DEVICE_NAME')
                     obj.deviceName = obj.convertRxbytesToString(16, obj.rxBuffer); %cast to string
-                    obj.deviceNameReady = true;
-                    obj.waitForData = false;
+                    obj.deviceNameReady = true; %name is available
+                    obj.waitForData = false; %stop waiting for data
                     return;
             end
         end
-
+        
         function ret = convertRxbytesToInt(obj, offset, buf)
              ret = typecast(buf(1+offset:4+offset),'uint32'); %cast to int
         end
@@ -728,7 +797,10 @@ classdef LpmsBT < handle
              buf(1:offset)
              ret = char(buf(1:offset));
         end
-
+        
+        %% Parse raw config data received after a getConfig
+        %compute total data lenght according to how many sensors are
+        %enabled
         function ret = parseConfig(obj, config)
 
             %stream freq
@@ -769,9 +841,11 @@ classdef LpmsBT < handle
             end
             
             %gyroscope raw
-            obj.sensorDataLength=0;
+
+            obj.sensorDataLength=0; %tot data lenght
             if bitand(config, obj.LPMS_GYR_RAW_OUTPUT_ENABLED)%extract info
                 obj.gyrEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode) per axis = 6
                    obj.sensorDataLength = obj.sensorDataLength + 6;
                 else %4 bytes (32bit mode) per axis = 12
@@ -785,6 +859,7 @@ classdef LpmsBT < handle
             %accelerometer raw
             if bitand(config, obj.LPMS_ACC_RAW_OUTPUT_ENABLED) %extract info
                 obj.accEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode) per axis = 6
                    obj.sensorDataLength = obj.sensorDataLength + 6;
                 else %4 bytes (32bit mode) per axis = 12
@@ -798,6 +873,7 @@ classdef LpmsBT < handle
             %magnetometer raw
             if bitand(config, obj.LPMS_MAG_RAW_OUTPUT_ENABLED) %extract info
                 obj.magEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode) per axis = 6
                     obj.sensorDataLength = obj.sensorDataLength + 6;
                 else %4 bytes (32bit mode) per axis = 12
@@ -811,6 +887,7 @@ classdef LpmsBT < handle
             %angular velocity
             if bitand(config, obj.LPMS_ANGULAR_VELOCITY_OUTPUT_ENABLED) %extract info
                 obj.angularVelEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode) per axis = 6
                     obj.sensorDataLength = obj.sensorDataLength + 6;
                 else %4 bytes (32bit mode) per axis = 12
@@ -824,6 +901,7 @@ classdef LpmsBT < handle
             %quaternions
             if bitand(config, obj.LPMS_QUAT_OUTPUT_ENABLED) %extract info
                 obj.quaternionEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode) per value = 8
                     obj.sensorDataLength = obj.sensorDataLength + 8;
                 else %4 bytes (32bit mode) per value = 16
@@ -837,6 +915,7 @@ classdef LpmsBT < handle
             %euler angles
             if bitand(config, obj.LPMS_EULER_OUTPUT_ENABLED) %extract info
                 obj.eulerAngleEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode) per axis = 6
                     obj.sensorDataLength = obj.sensorDataLength + 6;
                 else %4 bytes (32bit mode) per axis = 12
@@ -850,6 +929,7 @@ classdef LpmsBT < handle
             %linear acceleration
             if bitand(config, obj.LPMS_LINACC_OUTPUT_ENABLED) %extract info
                 obj.linAccEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode) per axis = 6
                     obj.sensorDataLength = obj.sensorDataLength + 6;
                 else %4 bytes (32bit mode) per axis = 12
@@ -863,6 +943,7 @@ classdef LpmsBT < handle
             %pressure
             if bitand(config, obj.LPMS_PRESSURE_OUTPUT_ENABLED) %extract info
                 obj.pressureEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode)
                     obj.sensorDataLength = obj.sensorDataLength + 2;
                 else %4 bytes (32bit mode)
@@ -876,6 +957,7 @@ classdef LpmsBT < handle
             %temperature
             if bitand(config, obj.LPMS_TEMPERATURE_OUTPUT_ENABLED) %extract info
                 obj.temperatureEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode)
                     obj.sensorDataLength = obj.sensorDataLength + 2;
                 else %4 bytes (32bit mode)
@@ -889,6 +971,7 @@ classdef LpmsBT < handle
             %altitude
             if bitand(config, obj.LPMS_ALTITUDE_OUTPUT_ENABLED) %extract info
                 obj.altitudeEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode)
                     obj.sensorDataLength = obj.sensorDataLength + 2;
                 else %4 bytes (32bit mode)
@@ -902,6 +985,7 @@ classdef LpmsBT < handle
             %heave motion
             if bitand(config, obj.LPMS_HEAVEMOTION_OUTPUT_ENABLED) %extract info
                 obj.heaveEnable = true;
+                % increment tot data lenght
                 if (obj.sixteenBitDataEnable)%2 bytes (16bit mode)
                     obj.sensorDataLength = obj.sensorDataLength + 2;
                 else %4 bytes (32bit mode)
@@ -913,7 +997,8 @@ classdef LpmsBT < handle
             disp("heaveEnable: " + string(obj.heaveEnable));
                          
         end
-
+        
+        %% Parse raw data from a sensor data packet
         function parseSensorData(obj)
             % TODO: Implement 16bit data parsing
             r2d = 57.2958; %radiant to degrees
@@ -1003,7 +1088,7 @@ classdef LpmsBT < handle
         end
     
         function configCallback(obj, n) %config interrupt
-            if(strcmp(string(n),"off")) %deactivate
+            if(strcmp(string(n),"off")) %disable
 %                 disp("trigger off");
                 configureCallback(  obj.BTconn, ...
                                     "off"...
@@ -1022,7 +1107,7 @@ classdef LpmsBT < handle
                                     @obj.readCallbackFcn ...
                                  );
             else
-                disp("argument not valid"); %error-> deactivate
+                disp("argument not valid"); %error-> disable
                 configureCallback(  obj.BTconn, ...
                                     "off"...
                                  );
