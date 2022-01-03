@@ -30,7 +30,7 @@ function [X,Y] = dataPreprocessing(dataset)
         file = detectPhases_3(file);
 
         %% remove rows with label = 0
-        file(table2array(file(:,end))==0,:) = [];
+        file(file{:,end}==0,:) = [];
 
         %% delete useless columns FOR THIS KIND OF SENSOR
         %extract file columns name
@@ -44,8 +44,8 @@ function [X,Y] = dataPreprocessing(dataset)
         end
 
         %split data and label and transpose the table
-        X{i} = transpose(table2array(file(:,1:end-1)));
-        Y{i} = transpose(categorical(table2array(file(:,end))));
+        X{i} = transpose(file{:,1:end-1});
+        Y{i} = transpose(categorical(file{:,end}));
 
     end
 
