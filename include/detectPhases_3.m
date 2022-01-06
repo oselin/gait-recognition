@@ -7,101 +7,56 @@ function [data] = detectPhases_3(data_in)
     %   GAIT PHASE RECOGNITION: OFFLINE AUTOMATIC THREASHOLD METHOD
     % ---------------------------------------------------------------------
    
-   %% LOAD 
-
-    %data = readtable(data_in);
-
+   %% LOAD
+    
+    % select the signal of interest: GyroZ
     sig = data_in.("GyroZ (deg/s)");
-
+    
+    % Time vector [ms * 10]
     t = 1:numel(sig);
-
+    
+    % length of signal
     L = length(t);
-    
-    %% PLOT and FFT
-    
-    %{
-        
-        figure
-        hold on
-        plot(t,sig, 'b');
-        hold off
-    
-    %% FFT
-
-        T_sample = t(2) -  t(1);
-
-        Fs = 1/T_sample;
-
-        f = Fs*(0:(L/2))/L;
-
-        f_max = f(end);
-
-        Y = fft(sig);
-        P2 = abs(Y/L);
-        P1 = P2(1:L/2+1);
-        P1(2:end-1) = 2*P1(2:end-1);
-
-        figure 
-        plot(f,P1)
-        
-    %}
-
+  
     %% THRESHOLD METHOD
-    
-    
-    % Implementare ulteriori condizioni di sequenzialità per eliminare
-    % disturbi dovuti a grosse oscillazioni, soprattutto per la ricerca di
-    % un unico MSw
-
+  
     %{
             Step  
     
-              1.     filtrare con un filtro passa basso frequenza in modo 
-                    da trovare un solo picco, ma allo stesso tempo tenere il
-                    più possibie fedele il segnale. Il segnale risulta essere 
-                    ben definito sotto una frequenza relativa di 0.3.
+              1.     filter with a low-pass filter to find only one peak for 
+                     period, the cutoff freq must be not too small to preserve
+                     a good signal
     
-              2.     filtrare con un filtro passa basso con una frequenza più
-                    bassa in modo da identificare la fase 2 
-
-              3.     impostare una soglia in modo automatico
-                    metodo pensato: media tra il massimo valore e la media del
-                    segnale, tenendo in considerazione solamente la parte
-                    positiva, volendo si può introdurre un peso.
-                    Creare matrice dove salvare segnali filtrati e numero
-                    della fase.
-
-              4.     grande ciclo for su tutto il segnale
+              2.     filter with a low-pass filter with  lower freq for phase 2
          
-              5.     trovare i picchi massimi corrispondenti alle fasi 
-                    MSw, massima velocità di rotazione della gamba durante
-                    la fase di swing. 
-                    Massimo locale e maggiore della soglia.
-                    Mettere flag MSw, togliere altri flag.
+              3.     calculate an automatic threshold -> weighted average between
+                     the positive part of the signal and its maximum 
+                     create a matrix to store the conditioned signals and phases
+
+              4.     big for loop on all the signal
+         
+              5.     find maximum peaks indicating MSw phase
               
-              6.     trovato MSw 
-                    piccolo ciclo for all'indietro per trovare il minimo 
-                    corrispondente alla fase TO. 
-                    Mettere flag TO, break
+              6.     once found MSw 
+                     backward for loop to find the nearest minimum -> TO
+  
               
-              7.     trovato MSw
-                    procedere con la ricerca della fase successiva:
-                    trovare il minimo successivo a MSw corrispondente a IC.
-                    Mettere flag IC, togliere flag MSw.
+              7.     once found TO
+                     backward for loop to find the nearest maximum -> MSt
               
-              8.     trovato IC
-                    procedere alla ricerca del massimo successivo
-                    corrispondente alla fase MSt, il massimo va ricercato
-                    nel segnale filtrato a più bassa frequenza.
-                    Mettere flag MSt, togliere flag IC.
+              8.     once found MSt
+                     go on with forward loop from MSw to find the nearest
+                     minimum -> IC
             
-              9.     trovato MSt
-                    procedere fino a trovare il massimo successivo, cioè
-                    MSw, ripetere dal punto 5.
+              9.     repeat from point 5.
 
     %}
 
     %% 1. filtering
+    
+    % for filtering it's used a butterworth filter
+    % not too selective and with appropriate cutoff 
+    % freq to preserve IC and TO
 
     [b_1,a_1] = butter(2, 0.3);
 
@@ -109,132 +64,112 @@ function [data] = detectPhases_3(data_in)
     
     %% 2. filtering
     
-    [b_2,a_2] = butter(2, 0.5);
+    % cutoff freq to avoid noise in the part of the signal
+    % between MSt and TO
+    
+    [b_2,a_2] = butter(2, 0.15);
 
     sig_filt_2 = filtfilt(b_2,a_2, sig);
 
-    %{
-        figure
-        hold on
-        plot(t,sig,'b','LineWidth',1);
-        plot(t,sig_filt, 'r','LineWidth',1);
-        plot(t,sig_filt_2, 'k','LineWidth',1);
-        xlim([1900,2100])
-        hold off
-    %}
-
     %% 3. threashold and sig new
-
+    
+    % initialize signal to calculate the average on the >0 part
     sig_zero = zeros(L);
+    
+    % initialize matrix to store signal
     sig_new = zeros(L,3);
 
+    % fill the signal_zero and the matrix [sig_filt_1, sig_filt_2, phases]
     for i=1:L
         sig_new(i,1) = sig_filt(i);
         sig_new(i,2) = sig_filt_2(i);
+        
+        % split signal, save only >0 part else nan 
         if sig_filt(i) > 0
             sig_zero(i) = sig_filt(i);
         else
             sig_zero(i) = NaN;
         end
     end    
-
+    
+    % compute max of the signal
     max_sig = max(sig);
-
-    mean_a = mean(sig_zero,'omitnan'); %% vector?
-
+    
+    % compute mean
+    mean_a = mean(sig_zero,'omitnan'); 
+    
+    % parameter to weight the max value of the signal
     k = 0.3;
-
-    threashold = (max_sig*k + mean_a(1))/2;  % cambiato valore di soglia
+    
+    % computhe threshold
+    threshold = (max_sig*k + mean_a(1))/2;  % cambiato valore di soglia
 
     %% 5. to 9. find phases
 
+    % flags for the phases
     MSw_found = 0;
     IC_found  = 0;
     TO_found  = 0;
     MSt_found = 0;
     
+    % remember the index when TO = 1
     TO_idx = 0;
 
     for i=2:L-1
 
-        if (sig_new(i,1) > sig_new(i-1,1)) && (sig_new(i,1) > sig_new(i+1,1))...  %condizione massimo MSw
-           && sig_new(i,1) > threashold && MSw_found == 0
+        if (sig_new(i,1) > sig_new(i-1,1)) && (sig_new(i,1) > sig_new(i+1,1))...  %maximum condition to find MSw
+           && sig_new(i,1) > threshold && MSw_found == 0
 
-            MSw_found = 1; % flag MSw
+            MSw_found = 1; % flag MSw and reset all flags
             TO_found  = 0;
             IC_found  = 0;
             MSt_found = 0;
         end
 
-        if MSw_found
+        if MSw_found 
 
             if TO_found == 0
                 for k = i-1:-1:2 % backward for cycle to find TO
-                    sig_new(k,3) = 3;
-                    if (sig_new(k,1) < sig_new(k+1,1))&&  (sig_new(k,1) < sig_new(k-1,1))
-                        TO_found = 1;
+                    sig_new(k,3) = 3; % save the phase value
+                    if (sig_new(k,1) < sig_new(k+1,1))&&  (sig_new(k,1) < sig_new(k-1,1)) % condition for TO
+                        TO_found = 1; % flag TO
                         TO_idx = k;
                         break
                     end
                 end
             end
             
-            if TO_found == 1 %search for MSt
+            if TO_found == 1 % backward for cycle to find MSt
                 for k = TO_idx-1:-1:2
-                    sig_new(k,3) = 2;
-                    if (sig_new(k,2) > sig_new(k+1,2)) &&  (sig_new(k,2) > sig_new(k-1,2)) && sig_new(k,2) > -60
-                        MSt_found = 1;
+                    sig_new(k,3) = 2; % save the phase value
+                    if (sig_new(k,2) > sig_new(k+1,2)) &&  (sig_new(k,2) > sig_new(k-1,2)) && sig_new(k,2) > -60 % condition for MSt (-60 safety threshold)
+                        MSt_found = 1; % flag MSt
                         break
                     end
                 end
             end
 
-            sig_new(i,3) = 4;
+            sig_new(i,3) = 4; % save the phase value
 
 
              if (sig_new(i,1) < sig_new(i-1,1)) && (sig_new(i,1) < sig_new(i+1,1))...
-                && sig_new(i,1) < threashold % condizione IC
+                && sig_new(i,1) < threshold %  IC condition
 
-                IC_found = 1;
-                MSw_found = 0;
+                IC_found = 1; % flag IC
+                MSw_found = 0; % reet flag MSw
 
             end
         end
 
         if IC_found
 
-            sig_new(i,3) = 1;
-%{
-            if (sig_new(i,2) > sig_new(i-1,2)) && (sig_new(i,2) > sig_new(i+1,2))
-
-                MSt_found = 1;
-
-                IC_found  = 0;
-            end
-%}
+            sig_new(i,3) = 1; % save the phase value
+            
         end
-%{
-        if MSt_found == 1
-
-            sig_new(i,3) = 2;
-
-        end
-%}
+        
     end
-
-
-
-    %{
-        figure
-        hold on
-        plot(t,sig_new(:,1),'b');
-        plot(t,100*sig_new(:,3), 'r');
-        xlim([1900,2500])
-        hold off
     
-    %}
-    
-    
+    % output of the function: add to the data in input the fitered signals and the phases (ID)
     data = [data_in, array2table(sig_new, 'VariableNames',{'gyro_z_filt','gyro_z_heavy_filt', 'ID'})];
     
 end
