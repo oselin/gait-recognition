@@ -54,7 +54,6 @@ test  = {file05, file10};
 train = dataPreprocessingUnsupervised(train);
 test  = dataPreprocessingUnsupervised(test);
 
-%%
 %train = extractFeatures(train,150);
 %test  = extractFeatures(test, 150);
 %% Setting data properly for unsupervised learning
