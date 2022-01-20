@@ -49,7 +49,7 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
         results(i) = grp2idx(y(end)); 
 
         if graphicsEnabled
-            to_plot = DATASTREAM(3,:);
+            to_plot = DATASTREAM(6,:);
             time = i:i+TIMEFRAME-1;
             plotLabeledData([to_plot' y_to_plot'], time);
             xlim([i i+TIMEFRAME-1]);
