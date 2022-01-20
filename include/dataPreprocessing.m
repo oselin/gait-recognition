@@ -44,7 +44,7 @@ function [X,Y] = dataPreprocessing(dataset)
         % extract file columns name
         columns = file.Properties.VariableNames;
         for j = 1:width(columns)
-            % if column's name isn0t in useful_data
+            % if column's name isn't in useful_data
             if(isempty(strfind(useful_data,columns{j})))
                 % delete column
                 file(:,columns(j)) = [];

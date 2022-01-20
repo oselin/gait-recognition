@@ -49,6 +49,7 @@ train = {file01, file02, file03, file04, file06, file07, file08, file09, file11,
 test  = {file05, file10};
 
 %% Labeling and preparing data to train and test the network
+% see dataPreprocessing.m
 [XTrain,YTrain] = dataPreprocessing(train);
 [XTest,YTest]   = dataPreprocessing(test);
 
@@ -59,10 +60,17 @@ numHiddenUnits = 100;
 numClasses = 4;
 
 layers = [ ...
+    % input layer
     sequenceInputLayer(numFeatures)
+    % recurrent layers: 
+    % numHiddenUnits indicates number of hidden layers
+    % OutputMode = 'sequence' indicates that the net must classify each 
+    % time instant of the streaming
     lstmLayer(numHiddenUnits,'OutputMode','sequence')
+    % decision layer
     fullyConnectedLayer(numClasses)
     softmaxLayer
+    % output layer
     classificationLayer];
 
 %% -Setting the options for training
@@ -92,28 +100,41 @@ net = results{1,1,1,1}.net;
 % title("Test Data")
 
 %% Prediction of the classes (GAIT PHASES) and ACCURACY
+% phase accuracy
 disp("Accuracy per phase:")
-correct = zeros(1,4);
-totPhases = zeros(1,4);
+correct = zeros(1,4); % correct predictions
+totPhases = zeros(1,4); % tot number of predictions
+% for each test case
 for i = 1:length(XTest)
+    % evaluate network
     YPred = classify(net,XTest{i});
+    % for each phase
     for j = 1:4
+        % update number of time instant with that phase
         totPhases(j) = totPhases(j) + sum(YTest{i} == categorical(j));
+        % update number of correct predictions for that phase
         correct(j) = correct(j) + sum(YPred(YTest{i} == categorical(j)) == categorical(j));      
     end
 end 
+% display ratio result
 disp(correct./totPhases);
 
+% test accuracy
 disp("Accuracy per test set")
 acc = zeros(1,length(XTest));
+% for each test
 for i = 1:length(XTest)
+    % evaluate network
     YPred = classify(net,XTest{i});
+    % compute accuracy for the used test
+    % correct predictions / tot number of predictions
     acc(i) = sum(YPred == YTest{i})/numel(YTest{i});
 end 
+% display ratio result
 disp(acc);
 
 %% SIMULATE THE DATASTREAM
-
+% see simulateStream.m
 disp(simulateStream(net, file10, 0, 1));
 
 %% Data visualization

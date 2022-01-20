@@ -91,11 +91,11 @@ disp("Start training");
 
 layers = []; %net structure
 
-% to compute phase accuracy
+% to compute phase accuracy (same method used in main2.m)
 correct   = zeros(1,NumClasses); %result from classification
 totPhases = zeros(1,NumClasses); %correct label
 
-% to compute test accuracy
+% to compute test accuracy (same method used in main2.m)
 acc = zeros(1,length(XTest));
 
 %define net's layers
@@ -162,8 +162,9 @@ for i = 1:I
                 end 
                 netData.phaseAcc = correct./totPhases; %phase acc
                 netData.testAcc = acc; %test acc
-
-                netData.streamAcc = simulateStream(netData.net, file10, 0, 0);%stream acc
+                
+                %stream acc (see simulateStream.m)
+                netData.streamAcc = simulateStream(netData.net, file10, 0, 0);
                     
                 results{i,j,k,l} = netData; %saving net
             end

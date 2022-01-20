@@ -37,6 +37,7 @@ streamAcc      = zeros(I, J, K, L); %stream accuracy
 meanTestAcc    = zeros(I, J, K, L); %test mean accuracy
 meanPhaseAcc   = zeros(I, J, K, L); %phases mean accuracy
 
+% Monodimensional array definition to evaluate max performances
 flatten_result = cell(54,1); %trained nets in monodimensional array
 flatten_streamAcc = zeros(54,1); %stream accuracy in monodimensional array
 flatten_meanTestAcc = zeros(54,1); %test accuracy in monodimensional array
@@ -47,15 +48,23 @@ flatten_meanPhaseAcc = zeros(54,1); %phases accuracy in monodimensional array
 %% Overall analysis
 disp("Overall analysis");
 
+%fill previously defined structures
 for i = 1:I
     for j = 1:J
         for k = 1:K
             for l = 1:L
-                %fill previously defined structures
+                % save net in monodimensional array
                 flatten_result{(i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l} = results{i,j,k,l};
+                % compute streaming accuracy and save it (see 
+                % simulateStream.m)
                 streamAcc(i,j,k,l)    = results{i,j,k,l}.streamAcc;
+                % compute mean accuracy of the tests and save it (see
+                % trainMultipleNets.m)
                 meanTestAcc(i,j,k,l)  = mean(results{i,j,k,l}.testAcc);
+                % compute mean accuracy of the phases and save it (see
+                % trainMultipleNets.m)
                 meanPhaseAcc(i,j,k,l) = mean(results{i,j,k,l}.phaseAcc);
+                % save accuracies in monodimensional array
                 flatten_streamAcc((i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l) = streamAcc(i,j,k,l);
                 flatten_meanTestAcc((i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l) = meanTestAcc(i,j,k,l);
                 flatten_meanPhaseAcc((i-1)*J*K*L+(j-1)*K*L+(k-1)*L+l) = meanPhaseAcc(i,j,k,l);
@@ -74,6 +83,19 @@ disp(flatten_result{ItestAcc});
 disp(flatten_result{IphaseAcc});
 
 %% Net type analysis
+% For each type of net layers (GRU and LSTM) it's calcualted the average
+% accuracies (stream, test, phase) for each param: 
+% N of hidden layers (3 cases)
+% N of epochs for training (3 cases)
+% Gradient threshold (3 cases)
+%
+% The avarage for each param's value is calculated among all nets with that
+% param value, example:
+% GRU net, max epochs = 100
+% the avarage is computed on nets of type GRU, max n of epochs equal to
+% 100, and all values of n of hidden layers and gradient threshold (in
+% total 9 different results)
+% ------------------------------------------------
 
 markerSize = 3;
 gru = zeros(3,3); %values for gru-type nets
@@ -135,7 +157,7 @@ hold off
 %define legend properties
 hleg1 = legend(["GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "lstm streamAcc", "lstm testAcc", "lstm phaseAcc"], ...
     'FontSize',14);
-set(hleg1,'position',[0.6 0.1 0.3 0.3]);
+set(hleg1,'position',[0.6 0.1 0.25 0.25]);
 xlabel('N of epochs');
 
 %gradientThreshold
@@ -160,9 +182,12 @@ plot(x, gru(3,:), 'r:o', "MarkerSize", markerSize);
 plot(x, lstm(1,:), 'b-o', "MarkerSize", markerSize);
 plot(x, lstm(2,:), 'b--o', "MarkerSize", markerSize);
 plot(x, lstm(3,:), 'b:o', "MarkerSize", markerSize);
-hold off
 % legend("GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "lstm streamAcc", "lstm testAcc", "lstm phaseAcc");
 xlabel('Gradient threshold');
+% pbaspect([4,1,1])
+% xlim([15000/100,16000/100])
+% exportgraphics(gca,'filename.png','Resolution',1000);
+hold off
 
 return
 

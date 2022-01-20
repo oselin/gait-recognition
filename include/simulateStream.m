@@ -31,6 +31,10 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
         DATASTREAM = [DATASTREAM(:,2:end) new_stream'];
         %Predict the label
         y = classify(network, DATASTREAM);
+
+        % beeing the output mode sequence, every time the net classify the
+        % data batch, all labels are updated. If reset label is false, we
+        % only update the last time instant
                 
         if reset_label
             % update all labels
@@ -54,6 +58,6 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
 
     end
 
-    % compute accuracy
+    % compute accuracy ratio
     acc = sum(results == testData{:,end})/height(testData);
 end
