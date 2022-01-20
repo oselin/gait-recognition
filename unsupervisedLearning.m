@@ -47,45 +47,59 @@ catch ME
         return;
     end
 end
+
 train = {file01, file02, file03, file04, file06, file07, file08, file09, file11, file12, file13, file14, file15};
 test  = {file05, file10};
 
-%% Labeling and preparing data to train and test the network
-train = dataPreprocessingUnsupervised(train);
-test  = dataPreprocessingUnsupervised(test);
+acc_train = [0 0];
+acc_test  = [0 0];
+%% START OF K-MEANS METHOD
+% A for-cycle is used to run it twice. The first time no feature
+% estimations are applied, the second time yes
+for i=1:2
+    if i==1
+        %% [NO FEATURES] Labeling and preparing data to train and test the network
+        processed_train = dataPreprocessingUnsupervised(train);
+        processed_test  = dataPreprocessingUnsupervised(test );
+        disp("Starting K_Means Method on raw data");
+    else
+        %% [FEATURES] Labeling and preparing data to train and test the network
+        processed_train = dataPreprocessingUnsupervised(train,'features',150);
+        processed_test  = dataPreprocessingUnsupervised(test, 'features',150);
+        disp("Starting K_Means Method on feature data");
+    end
 
-%train = extractFeatures(train,150);
-%test  = extractFeatures(test, 150);
-%% Setting data properly for unsupervised learning
+    %% Setting data properly for unsupervised learning
+    Xtrain = processed_train(:,1:end-1);
+    Ytrain = processed_train(:,end);
+    
+    Xtest = processed_test(:,1:end-1);
+    Ytest = processed_test(:, end);
+    
+    %% Unsupervised Learning: k-Means
+    [idx, C] = kmeans(Xtrain, ...
+                      4, ...
+                      "Replicates", 60 ...
+                      );
 
-Xtrain = train(:,1:end-1);
-Ytrain = train(:,end);
+    % Train accuracy is computed
+    acc_train(i) = sum(idx==Ytrain)./numel(idx);
+    
+    %% Prediction for the unsupervised learning
+    [~,idx_test] = pdist2(C,Xtest,'euclidean','Smallest',1);
 
-Xtest = test(:,1:end-1);
-Ytest = test(:, end);
+    % Test accuracy is computed
+    acc_test(i) = sum(idx_test==Ytest')./numel(idx_test);
+end
 
-%% Unsupervised Learning: k-Means
-[idx, C] = kmeans(Xtrain, ...
-                  4, ...
-                  "Display","final", ...
-                  "Replicates", 60 ...
-                  );
-comp = [idx,Ytrain];
-acc_train = sum(idx==Ytrain)./numel(idx);
-disp("Unsupervised [kMeans] train accuracy: " + num2str(acc_train));
+%% Displaying the results
+for i = 1:2
+    if i == 1
+        mode = "[NOFEATUR] ";
+    else
+        mode = "[FEATURES] ";
+    end
 
-%% Prediction for the unsupervised learning
-[~,idx_test] = pdist2(C,Xtest,'euclidean','Smallest',1);
-
-acc_test = sum(idx_test==Ytest')./numel(idx_test);
-disp("Unsupervised [kMeans] test accuracy: " + num2str(acc_test));
-return
-%% Show the results
-N = 1:9900;
-gscatter(Xtrain(N,7),Xtrain(N,8),idx(N)',"rgcb")
-hold on
-plot(C(:,1),C(:,2),'kx')
-gscatter(Xtest(N,7),Xtest(N,8),idx_test(N)', "rgcb" ,'o')
-legend('Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster Centroid', ...
-    'Data classified to Cluster 1','Data classified to Cluster 2', ...
-    'Data classified to Cluster 3','Data classified to Cluster 4')
+    disp(mode + "Unsupervised [kMeans] train accuracy: " + num2str(acc_train(i)));
+    disp(mode + "Unsupervised [kMeans] test  accuracy: " + num2str(acc_test(i)));
+end
