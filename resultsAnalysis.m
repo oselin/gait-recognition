@@ -102,9 +102,6 @@ gru = zeros(3,3); %values for gru-type nets
 lstm = zeros(3,3); %values for lstm-type nets
 x = zeros(1,3); %x-axis values
 
-t = tiledlayout('flow','TileSpacing','Compact');
-title(t,'Networks accuracy by type, varying:');
-
 %nHiddenLayers
 
 for j= 1:J %for each nHiddenLayers value
@@ -118,8 +115,9 @@ for j= 1:J %for each nHiddenLayers value
     lstm(3,j) = mean(meanPhaseAcc(2,j,:,:),"all"); %mean phase acc for lstm nets
 end
 
+fig = figure(1);
 %results plot
-nexttile
+subplot(2,2,1);
 hold on
 plot(x, gru(1,:), 'r-o', "MarkerSize", markerSize);
 plot(x, gru(2,:), 'r--o', "MarkerSize", markerSize);
@@ -145,7 +143,7 @@ for k= 1:K %for each maxEpochs value
 end
 
 %results plot
-nexttile
+subplot(2,2,2);
 hold on
 plot(x, gru(1,:), 'r-o', "MarkerSize", markerSize);
 plot(x, gru(2,:), 'r--o', "MarkerSize", markerSize);
@@ -153,11 +151,12 @@ plot(x, gru(3,:), 'r:o', "MarkerSize", markerSize);
 plot(x, lstm(1,:), 'b-o', "MarkerSize", markerSize);
 plot(x, lstm(2,:), 'b--o', "MarkerSize", markerSize);
 plot(x, lstm(3,:), 'b:o', "MarkerSize", markerSize);
+xlim([150 200]);
 hold off
 %define legend properties
-hleg1 = legend(["GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "lstm streamAcc", "lstm testAcc", "lstm phaseAcc"], ...
-    'FontSize',14);
-set(hleg1,'position',[0.6 0.1 0.25 0.25]);
+hleg1 = legend(["GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "LSTM streamAcc", "LSTM testAcc", "LSTM phaseAcc"], ...
+    'FontSize',10);
+set(hleg1,'position',[0.7 0.15 0.075 0.25]);
 xlabel('N of epochs');
 
 %gradientThreshold
@@ -174,7 +173,7 @@ for l= 1:L %for each gradientThreshold value
 end
 
 %results plot
-nexttile
+subplot(2,2,3);
 hold on
 plot(x, gru(1,:), 'r-o', "MarkerSize", markerSize);
 plot(x, gru(2,:), 'r--o', "MarkerSize", markerSize);
@@ -186,8 +185,10 @@ plot(x, lstm(3,:), 'b:o', "MarkerSize", markerSize);
 xlabel('Gradient threshold');
 % pbaspect([4,1,1])
 % xlim([15000/100,16000/100])
-% exportgraphics(gca,'filename.png','Resolution',1000);
 hold off
+sgtitle('Networks accuracy by type, varying:')
+
+exportgraphics(fig,'graphs.png','Resolution',1000);
 
 return
 
