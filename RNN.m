@@ -136,6 +136,3 @@ disp(acc);
 %% SIMULATE THE DATASTREAM
 % see simulateStream.m
 disp(simulateStream(net, file10, 0, 1));
-
-%% Data visualization
-%dataVisualization('data/record_walk_21-11-21_2nd_caviglia/WIN_20211121_14_46_37_Pro.mp4',27,file);

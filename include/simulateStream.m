@@ -47,11 +47,12 @@ function [acc] = simulateStream(network ,testData, reset_label, graphicsEnabled)
         
         % save stream-like classification result to compute accuracy
         results(i) = grp2idx(y(end)); 
-
+        
+        %update plot
         if graphicsEnabled
-            to_plot = DATASTREAM(6,:);
-            time = i:i+TIMEFRAME-1;
-            plotLabeledData([to_plot' y_to_plot'], time);
+            to_plot = DATASTREAM(6,:); %gyroZ
+            time = i:i+TIMEFRAME-1; % x axis
+            plotLabeledData([to_plot' y_to_plot'], time); % plot with line colour associated to label
             xlim([i i+TIMEFRAME-1]);
             %pause(0.01); %0.01 is the frequency of the incoming data [100Hz]
         end
