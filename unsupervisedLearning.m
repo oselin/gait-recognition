@@ -90,6 +90,20 @@ for i=1:2
 
     % Test accuracy is computed
     acc_test(i) = sum(idx_test==Ytest')./numel(idx_test);
+
+    %%
+    f = figure(i);
+    gscatter(Xtrain(:,1),Xtrain(:,2),idx,'rbcg')
+    hold on
+    plot(C(:,1),C(:,2),'kx')
+    gscatter(Xtest(:,1),Xtest(:,2),idx_test,'bgmr','oooo')
+    legend('Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster Centroid', ...
+        'Data classified to Cluster 1','Data classified to Cluster 2', ...
+        'Data classified to Cluster 3','Data classified to Cluster 4')
+    title("k-Means clustering")
+    xlabel("Acc(X)")
+    ylabel("Acc(y)")
+    hold off
 end
 
 %% Displaying the results
