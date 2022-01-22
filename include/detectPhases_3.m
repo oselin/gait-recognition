@@ -56,9 +56,12 @@ function [data] = detectPhases_3(data_in)
     
     % for filtering it's used a butterworth filter
     % not too selective and with appropriate cutoff 
+    
     % freq to preserve IC and TO
+    
+    f_1 = 0.3
 
-    [b_1,a_1] = butter(2, 0.3);
+    [b_1,a_1] = butter(2, f_1);
 
     sig_filt = filtfilt(b_1,a_1, sig);
     
@@ -67,7 +70,9 @@ function [data] = detectPhases_3(data_in)
     % cutoff freq to avoid noise in the part of the signal
     % between MSt and TO
     
-    [b_2,a_2] = butter(2, 0.15);
+    f_2 = 0.15
+    
+    [b_2,a_2] = butter(2, f_2);
 
     sig_filt_2 = filtfilt(b_2,a_2, sig);
 
@@ -101,8 +106,11 @@ function [data] = detectPhases_3(data_in)
     % parameter to weight the max value of the signal
     k = 0.3;
     
-    % computhe threshold
+    % compute threshold
     threshold = (max_sig*k + mean_a(1))/2;  % cambiato valore di soglia
+    
+    % safety threshold for MSt
+    threshold_2 = -60
 
     %% 5. to 9. find phases
 
@@ -142,7 +150,7 @@ function [data] = detectPhases_3(data_in)
             if TO_found == 1 % backward for cycle to find MSt
                 for k = TO_idx-1:-1:2
                     sig_new(k,3) = 2; % save the phase value
-                    if (sig_new(k,2) > sig_new(k+1,2)) &&  (sig_new(k,2) > sig_new(k-1,2)) && sig_new(k,2) > -60 % condition for MSt (-60 safety threshold)
+                    if (sig_new(k,2) > sig_new(k+1,2)) &&  (sig_new(k,2) > sig_new(k-1,2)) && sig_new(k,2) > threshold_2 % condition for MSt (-60 safety threshold)
                         MSt_found = 1; % flag MSt
                         break
                     end
