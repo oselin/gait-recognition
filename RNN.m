@@ -140,4 +140,4 @@ disp(acc);
 
 %% SIMULATE THE DATASTREAM
 % see simulateStream.m
-% disp(simulateStream(net, file10, 0, 1));
+disp(simulateStream(net, file10, 0, 1));

@@ -38,10 +38,10 @@ meanTestAcc    = zeros(I, J, K, L); %test mean accuracy
 meanPhaseAcc   = zeros(I, J, K, L); %phases mean accuracy
 
 % Monodimensional array definition to evaluate max performances
-flatten_result = cell(54,1); %trained nets in monodimensional array
-flatten_streamAcc = zeros(54,1); %stream accuracy in monodimensional array
-flatten_meanTestAcc = zeros(54,1); %test accuracy in monodimensional array
-flatten_meanPhaseAcc = zeros(54,1); %phases accuracy in monodimensional array
+flatten_result = cell(I*J*K*L,1); %trained nets in monodimensional array
+flatten_streamAcc = zeros(I*J*K*L,1); %stream accuracy in monodimensional array
+flatten_meanTestAcc = zeros(I*J*K*L,1); %test accuracy in monodimensional array
+flatten_meanPhaseAcc = zeros(I*J*K*L,1); %phases accuracy in monodimensional array
 
 
 
@@ -183,8 +183,6 @@ plot(x, lstm(2,:), 'b--o', "MarkerSize", markerSize);
 plot(x, lstm(3,:), 'b:o', "MarkerSize", markerSize);
 % legend("GRU streamAcc", "GRU testAcc", "GRU phaseAcc", "lstm streamAcc", "lstm testAcc", "lstm phaseAcc");
 xlabel('Gradient threshold');
-% pbaspect([4,1,1])
-% xlim([15000/100,16000/100])
 hold off
 sgtitle('Networks accuracy by type, varying:')
 
