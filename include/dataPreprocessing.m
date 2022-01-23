@@ -1,4 +1,4 @@
-function [X,Y] = dataPreprocessing(dataset)
+function [X,Y] = dataPreprocessing(dataset, useful_data)
     %% --------------------------------------------------------------------
     %%  GAIT RECOGNITION BASED ON IMU DATA AND ML ALGORITHM
     %   Albi Matteo, Cardone Andrea, Oselin Pierfrancesco
@@ -22,13 +22,6 @@ function [X,Y] = dataPreprocessing(dataset)
     
     X = cell(numel(dataset),1); %to store data stream
     Y = cell(numel(dataset),1); %to store labels
-    
-    %data to keep from input dataset
-    useful_data = [ 'AccX (g)', 'AccY (g)', 'AccZ (g)', ...
-                    'GyroX (deg/s)', 'GyroY (deg/s)', 'GyroZ (deg/s)', ...
-                    'EulerX (deg)', 'EulerY (deg)', 'EulerZ (deg)', ...
-                    'LinAccX (g)', 'LinAccY (g)', 'LinAccZ (g)', ...
-                    'ID'];
 
     for i = 1:numel(dataset)
         %% Extract i-th file

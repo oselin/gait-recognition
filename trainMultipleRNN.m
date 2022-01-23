@@ -49,10 +49,16 @@ catch ME
 end
 train = {file01, file02, file03, file04, file06, file07, file08, file09, file11, file12, file13, file14, file15};
 test  = {file05, file10};
+%data to keep from input dataset
+useful_data = [ 'AccX (g)', 'AccY (g)', 'AccZ (g)', ...
+                'GyroX (deg/s)', 'GyroY (deg/s)', 'GyroZ (deg/s)', ...
+                'EulerX (deg)', 'EulerY (deg)', 'EulerZ (deg)', ...
+                'LinAccX (g)', 'LinAccY (g)', 'LinAccZ (g)', ...
+                'ID'];
 
 %% Labeling and preparing data to train and test the network
-[XTrain,YTrain] = dataPreprocessing(train);
-[XTest,YTest]   = dataPreprocessing(test);
+[XTrain,YTrain] = dataPreprocessing(train,useful_data);
+[XTest,YTest]   = dataPreprocessing(test,useful_data);
 
 %% Parameters of the RNN network
 % Constant parameters
