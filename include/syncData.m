@@ -25,13 +25,14 @@ function [syncr] = syncData(data, fs, graphicsEnabled)
     
     %% TO TEST THE FUNCTION ALONE, UNCOMMENT THIS
     %   and comment function and the last end
-    %clc;
-    %clear all;
-    %close all;
-    %file01 = readtable('../data/record_lab_15-12-21_afternoon/IMU.csv', "VariableNamingRule","preserve");
-    %file02 = readtable('../data/record_lab_15-12-21_afternoon/mitch.txt', "VariableNamingRule","preserve");
-    %data = {file01, file02};
-    %fs = 100; %sample frequency
+%     clc;
+%     clear all;
+%     close all;
+%     file01 = readtable('../data/record_lab_15-12-21_afternoon/IMU.csv', "VariableNamingRule","preserve");
+%     file02 = readtable('../data/record_lab_15-12-21_afternoon/mitch.txt', "VariableNamingRule","preserve");
+%     data = {file01, file02};
+%     fs = 100; %sample frequency
+%     graphicsEnabled = 1;
     
     LEN = length(data);
     % Create a cell in which put the imported data
