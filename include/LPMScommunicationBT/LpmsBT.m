@@ -22,7 +22,7 @@ classdef LpmsBT < handle
 %       Copyright: LP-Research Inc. 2016
 %       
 %
-%   NB: You must pair the device with your computer first before conencting 
+%   NB: You must pair the device with your computer first before connecting 
 %   to it 
 %
 %   GENERAL: to read an answer an interrupt like approach is used. To 
@@ -30,14 +30,14 @@ classdef LpmsBT < handle
 %   interrupt is passed the number of bytes the programm must receive to 
 %   trigger the interrupt and the function to call when the interrupt is 
 %   triggered. The function called is readCallbackFcn: it reads all the 
-%   data available on the input buffer and parse it calling the parse 
-%   function. The parse function read each byte until a full packet is red, 
-%   extracting all the needed info like packet function, data lenght and 
+%   data available on the input buffer and parses it by calling the parse 
+%   function. The parse function reads each byte until a full packet is read, 
+%   extracting all the needed info like packet function, data length and 
 %   raw data, saving them in object variables. Then the parseFunction 
-%   method is called, checking the packet function and executing the right 
-%   instructions according to it (parsing data in case of get instruction,
-%   check ack in case of set instruction).
-%   After all data in input buffer has been red, the program proceeds with
+%   method is called, checking the packet function code and executing the 
+%   right instructions according to it (parsing data in case of get 
+%   instruction, check ack in case of set instruction).
+%   After all data in input buffer has been read, the program proceeds with
 %   normal execution.
 %   NB in case of streaming mode, the interrupt is triggere every time a
 %   packet is received.
@@ -106,7 +106,7 @@ classdef LpmsBT < handle
         LPMS_MAG_RAW_OUTPUT_ENABLED = bitshift(1, 10);
         LPMS_PRESSURE_OUTPUT_ENABLED = bitshift(1, 9);
 
-        %stream freq values red by getConfig
+        %stream freq values read by getConfig
         LPMS_STREAM_FREQ_5HZ_ENABLED      = 0; 
         LPMS_STREAM_FREQ_10HZ_ENABLED     = 1;
         LPMS_STREAM_FREQ_30HZ_ENABLED     = 2;
@@ -550,7 +550,7 @@ classdef LpmsBT < handle
 
         end
         
-        %% Get last data from sensor
+        %% Get newest data from sensor
         function ret = getCurrentSensorData(obj)
             %ret data if successful
             %empty if fail
@@ -574,7 +574,8 @@ classdef LpmsBT < handle
                 obj.configCallback("off"); %disable interrupt
             end
         end
-      
+        
+        %% Get oldest data from sensor
         function ret = getQueueSensorData(obj)
             %ret data if successful
             %empty if fail
@@ -750,7 +751,7 @@ classdef LpmsBT < handle
         
         %% Depending on thr function of the packet receive, execute the associated instructions
         function parseFunction(obj)
-            switch (obj.currentFunction) %depending on the command ID red:
+            switch (obj.currentFunction) %depending on the command ID read:
                 case obj.REPLY_ACK %set function successful
                     disp('REPLY_ACK') 
                     obj.waitForAck = false; %stop waiting for ack
