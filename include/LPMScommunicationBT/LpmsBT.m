@@ -496,12 +496,14 @@ classdef LpmsBT < handle
                     obj.configCallback(11+obj.sensorDataLength); % set interrupt
                 end
                 ret = true;
+                % update the config
+                disp("setEnabledData successful, new config:");
+                obj.getConfig();
             else %received NACK
                 disp("setEnabledData failed");
                 ret = false;
             end
             obj.ack = false;
-
         end
         
         %% Set streaming frequency of the sensor
@@ -542,6 +544,9 @@ classdef LpmsBT < handle
                     obj.configCallback(11+obj.sensorDataLength); % set interrupt
                 end
                 ret = true;
+                disp("setStreamFreq successful");
+                % update streaming freq
+                obj.streamingFrequency = freq;
             else %received NACK
                 disp("setStreamFreq failed");
                 ret = false;
